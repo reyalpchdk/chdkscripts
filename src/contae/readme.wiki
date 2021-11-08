@@ -1,17 +1,9 @@
-contae.lua v0.11 Raw meter based auto exposure for continuous shooting
-
 =Overview=
+contae.lua v0.13 Raw meter based auto exposure for continuous shooting
+
 This script requires CHDK 1.4.1 or later
 
 The basic idea is the script adjusts exposure after each shot in a continuous sequence to avoid over or under exposure in the next shot.
-
-==Change History==
-===Version 0.12===
-* If "ISO Adj Tv" is set longer than "Max Tv", it is now set to "Max Tv", meaning the ISO adjustment will start when shutter adjestment ends. This fixes a bug where the "Max Tv" limit would be ignored. To disable ISO adjustment, set "Target ISO" and "Max ISO" to the same value. Thanks SkepticaLee for the report.
-* Fixed bug that where some display would freeze until the end of the raw timeout at the end of a continuous burst.
-
-===Version 0.11===
-Fixed a bug that caused exposure to stop increasing when Max ISO was hit, regardless of Max Tv. Thanks udo for the report.
 
 =Links=
 Discussion / Bug reporting thread:
@@ -22,6 +14,18 @@ http://chdk.wikia.com/wiki/Lua/Scripts:_Continuous_Autoexposure
 
 Github repo with current development source:
 https://github.com/reyalpchdk/chdkscripts
+
+==Change History==
+===Version 0.13 - in progress===
+* Updated rawexp lib
+* Added smoothign options
+
+===Version 0.12 - Aug 6, 2017===
+* If "ISO Adj Tv" is set longer than "Max Tv", it is now set to "Max Tv", meaning the ISO adjustment will start when shutter adjestment ends. This fixes a bug where the "Max Tv" limit would be ignored. To disable ISO adjustment, set "Target ISO" and "Max ISO" to the same value. Thanks SkepticaLee for the report.
+* Fixed bug that where some display would freeze until the end of the raw timeout at the end of a continuous burst.
+
+===Version 0.11===
+Fixed a bug that caused exposure to stop increasing when Max ISO was hit, regardless of Max Tv. Thanks udo for the report.
 
 =Script usage=
 When the script is running, keys like set, up, down, left, right, half shoot are passed to the Canon firmware. Menu exits the script.

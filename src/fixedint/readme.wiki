@@ -1,16 +1,14 @@
+=Overview=
 fixedint.lua v1.4 - An astrophotography oriented script for long exposures + fixed exposure intervalometer
 
-See the wiki page for the latest version of the script and this documentation:
-http://chdk.wikia.com/wiki/Lua/Scripts:_Fixed_Exposure_Intervalometer
+This script shoots one or more shots at a constant exposure. It is primarily intended for astrophotography, either single long exposure shorts, sequences for "stacking", or timelapse. It is distantly related to Meteor Intervalometer (http://chdk.wikia.com/wiki/Meteor_Intervalometer_with_Dark_Frame_Management), but is optimized for the authors particular workflow.
 
+=Links=
 Discussion / Bug reporting thread:
 http://chdk.setepontos.com/index.php?topic=12695.0
 
 Github repo with current development source:
 https://github.com/reyalpchdk/chdkscripts
-
-=Overview=
-This script shoots one or more shots at a constant exposure. It is primarily intended for astrophotography, either single long exposure shorts, sequences for "stacking", or timelapse. It is distantly related to Meteor Intervalometer (http://chdk.wikia.com/wiki/Meteor_Intervalometer_with_Dark_Frame_Management), but is optimized for the authors particular workflow.
 
 ==Change History==
 ===Version 1.4 - in development===

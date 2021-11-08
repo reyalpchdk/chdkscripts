@@ -9,7 +9,7 @@ Fast, accurate intervalometer, suitable for sunrises, sunsets and similar. Uses 
 data for exposure changes, providing smooth, accurate exposure control in almost any illumination.
 
 * [Release](https://app.box.com/s/k4w85tnsf4gl2pvwh4mvu35vejkup53j) 0.25
-* [Development build](built/rawopint.lua)
+* [Development build](built/rawopint.lua) ([download](built/rawopint.lua?raw=1))
 * [Source + documentation](src/rawopint)
 * [Forum Thread](https://chdk.setepontos.com/index.php?topic=12697.0)
 
@@ -18,7 +18,7 @@ Astrophotography oriented intervalometer for long exposure, timelapse and genera
 stacks. Shoots all shots with the same exposure.
 
 * [Release](https://app.box.com/s/nqzoeubgxkgnitz7o7wotvbe90ejegni) 1.3
-* [Development build](built/fixedint.lua)
+* [Development build](built/fixedint.lua) ([download](built/fixedint.lua?raw=1))
 * [Source + documentation](src/fixedint)
 * [Forum Thread](https://chdk.setepontos.com/index.php?topic=12695.0)
 
@@ -26,7 +26,7 @@ stacks. Shoots all shots with the same exposure.
 Uses raw image data to proved auto-exposure while shooting in continuous mode.
 
 * [Release](https://app.box.com/s/d1xeg34h2lyla3jz30sb9khgqfg57ul8) 0.12
-* [Development build](built/contae.lua)
+* [Development build](built/contae.lua) ([download](built/contae.lua?raw=1))
 * [Source + documentation](src/contae)
 * [Forum Thread](https://chdk.setepontos.com/index.php?topic=12696.0)
 

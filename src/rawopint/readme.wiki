@@ -14,8 +14,21 @@ This is still under development, and is not considered entirely finished. In par
 * There are not enough options to adjust all the things a user might want to adjust.
 Despite the above, it can still produce good results in many situations.
 
+=Links=
+Discussion / Bug reporting thread:
+http://chdk.setepontos.com/index.php?topic=12697.0
+
+Github repo with current development source:
+https://github.com/reyalpchdk/chdkscripts
+
+Earlier discussion can be found in the raw hook development thread:
+http://chdk.setepontos.com/index.php?topic=11081.msg119265#msg119265
+
+Many of the concepts in the script and CHDK shooting hooks were inspired by Lapser's work in:
+http://chdk.setepontos.com/index.php?topic=8997.0
+
 ==Change History==
-===Version 0.26 - in progress ===
+===Version 0.26 - in progress===
 * CHDK 1.5.1 or later required
 * ND value and initial ND state now automatically detected for most ports.
 * ND should work on most cameras in "quick" mode
@@ -57,22 +70,6 @@ Despite the above, it can still produce good results in many situations.
 * Changed some defaults. Meter now defaults to 90%, meter step 15.
 * Log mode now has options for "none", "replace" and "append", defaults to append.
 * Fix delay on script exit reported by c_joerg in http://chdk.setepontos.com/index.php?topic=11081.msg125651#msg125651
-
-=Links=
-Discussion / Bug reporting thread:
-http://chdk.setepontos.com/index.php?topic=12697.0
-
-Wiki page for the latest version of the script and this documentation:
-http://chdk.wikia.com/wiki/Lua/Scripts:_Raw_Meter_Intervalometer
-
-Github repo with current development source:
-https://github.com/reyalpchdk/chdkscripts
-
-Earlier discussion can be found in the raw hook development thread:
-http://chdk.setepontos.com/index.php?topic=11081.msg119265#msg119265
-
-Many of the concepts in the script and CHDK shooting hooks were inspired by Lapser's work in:
-http://chdk.setepontos.com/index.php?topic=8997.0
 
 =Script usage=
 This script has a lot of options which affect the final behavior. While the defaults can produce reasonable results in many situations, some experimentation is recommended to get a feel for the impact of the various options. The log file provides a wealth of information to understand what happened in a given run. Some general descriptions and usage guidelines are provided below.
