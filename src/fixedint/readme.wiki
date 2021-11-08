@@ -1,0 +1,194 @@
+fixedint.lua v1.4 - An astrophotography oriented script for long exposures + fixed exposure intervalometer
+
+See the wiki page for the latest version of the script and this documentation:
+http://chdk.wikia.com/wiki/Lua/Scripts:_Fixed_Exposure_Intervalometer
+
+Discussion / Bug reporting thread:
+http://chdk.setepontos.com/index.php?topic=12695.0
+
+Github repo with current development source:
+https://github.com/reyalpchdk/chdkscripts
+
+=Overview=
+This script shoots one or more shots at a constant exposure. It is primarily intended for astrophotography, either single long exposure shorts, sequences for "stacking", or timelapse. It is distantly related to Meteor Intervalometer (http://chdk.wikia.com/wiki/Meteor_Intervalometer_with_Dark_Frame_Management), but is optimized for the authors particular workflow.
+
+==Change History==
+===Version 1.4 - in development===
+* Fixed some cases where some cameras would take an extra shot at script exit
+* Fixed display off not working if cam was in canon power saving before initial half press
+
+===Version 1.3 - May 6, 2018===
+* Added options to start at a particular clock time
+* Added options for zoom and focus distance
+* Fixed problems with long intervals
+
+===Version 1.2 - Jan 5, 2016===
+* Fixed the interval being ignored and "sleep" not being logged
+
+===Version 1.1===
+* Initial release
+
+=General usage notes=
+
+This script is requires CHDK 1.4.1 or later. Options are described in detail in the options section below.
+
+Set focus to infinity in the Canon firmware or SD overrides before shooting.
+
+Picture review and flash should be turned off in Canon settings.
+
+A tripod is recommended. For small P&S, $5 minipod will give adequate results.
+
+Use the "start delay" to avoid picking up camera shake when you start the script.
+
+Unless you use a tracking mount, longer exposure don't allow you to go "deeper" once trailing becomes significant. Accumulation of background light actually makes it harder to pick out faint objects. When trailing becomes noticeable depends on sensor resolution, focal length and where in the sky you are aimed. For wide angles, trails generally become significant over 15 seconds.
+
+In moderate light pollution, I find unguided exposures readily pick up stars down to magnitude 6 - 7 (roughly the limit of naked eye visibility under very good conditions.) Faster moving objects like meteors and satellites must be much brighter to show up.
+
+For satellite passes, exposures of 1-4 minutes can give a nice continuous track, with moderate star trails.
+
+Aperture (Av) is not controlled by the script, but should generally be the widest value. If you shoot in P or Auto mode, this should happen automatically at night.
+
+With raw, shooting low ISO and Ev adjustment in post processing often gives similar results and more flexibility than shooting at high ISO, while avoiding significant "processing" time on the camera. The optimal settings can vary significantly depending on the camera sensor hardware.
+
+Getting good results from raw requires using raw processing software, not just some image program that happens to be able to load raw. The examples linked below were processed using Raw Therapee (http://rawtherapee.com/).
+
+The script is optimized for using raw with Canon dark frame disabled and set of "master" dark frames for standard combinations of exposure and focal length. This allows you to shoot long exposures without waiting for the Canon dark frame processing between each shot, while not sacrificing quality. The Tv and ISO Mode settings allow quickly selecting from a limited set of standard values. All the Tv options are added together so you can use the Tv+... options when something outside the standard range is required.
+
+"Disable Canon Dark Frame" should be checked both when shooting the actual shots and when creating dark frames. You should also have CHDK manual badpixel removal (badpixel/badpixel.txt) disabled: The dark frame will take care of hot pixels, and you do not want them "fixed" in your dark frames.
+
+==Making master dark frames==
+* "Enable Lua Native Calls" must be set in the CHDK misc menu.
+* leave Tv, ISO and zoom settings the same as the actual shots.
+* check "Make dark frames",
+* Set "shots" to 5-10, run the script, and combine them on camera with "raw average".
+
+The averaged frame is your master dark. Raw therapee can automatically select dark frames placed in the appropriate directory based on camera and exposure settings.
+
+For optimal results, the dark frames should be taken at a similar temperature to the light frames. You can use the sensor temperature in the log to organize both light and dark frames by temperature.
+
+==Amp glow==
+Some cameras (especially those from before about 2012) show very significant "amp glow" for exposures of a few tens of seconds or more. This shows up as a purplish glow in one or more corners of the image. Amp glow can be mitigated to some extent using dark frames. More recent cameras tend to perform better, with exposures of several minutes not showing significant amp glow.
+
+
+=Examples=
+
+Elph 130, 30s exposure. Pleiades + comet C/2014 Q2 (Lovejoy)
+* JPEG from DNG https://app.box.com/s/ibu3hnmhp7iv50cw4wb6y8vywg2hpdfb
+* Camera JPEG https://app.box.com/s/s21jmrnpd877mebx5tmdyina275ycvs8
+* DNG https://app.box.com/s/okoak3qrkln0jycbq1jvmrp4r9zy9g8s
+
+D10, 64s exposure. Pleiades + comet C/2014 Q2 (Lovejoy). Shows amp glow, and removal with dark frame.
+* JPEG from DNG https://app.box.com/s/74epoa5y3fd7ter8fs6gj6zmpkf0guoe
+* Camera JPEG https://app.box.com/s/eum5n5smdjj8or7h5k3s8j6a3zma5lol
+* DNG https://app.box.com/s/r6syso7kh64v59glsjcy746wvttndrfd
+
+Elph 130, 512s exposure. Polaris + aircraft + star trails
+* JPEG from DNG https://app.box.com/s/hlmyldpnzde8ahp1yyzx9oui4dhankff
+* Camera JPEG https://app.box.com/s/wjixac2mqbhuenkw6vpnawpwse367z1a
+* DNG https://app.box.com/s/yyy687wgjrmja56vzwtyb3oqsmp01h9r
+
+D10, Timelapse of 180 x 64s exposures.  Orion rising + clouds
+* https://app.box.com/s/xdsz4btg8fjet8vcb1p93ukera90ic87
+
+Elph 130, 128s exposure. Tiangong 1 space station.
+* JPEG from DNG https://app.box.com/s/n97z7b5dep23lo8sen12vhkui3nr39ks
+* Camera JPEG https://app.box.com/s/62k6pjc8yyiw18r1il51949r8l1wpwsk
+* DNG https://app.box.com/s/rbk3cv5f5g52qm6obzwfihxbvi4d86dr
+
+SX710HS, 60 x 1/140th, median stack moon
+* Single frame jpeg from DNG https://app.box.com/s/6ezmwh4pzw5k7eevg85qkgme1et4arey
+* Median stacked, RL deconvolution sharpened https://app.box.com/s/d9l1ugmrvwpofamhfyfcjpallcsh4ofh
+* All frames as animation https://app.box.com/s/v82uw098vi0wwi1gpreiqibfnj6248xh
+
+=Script options=
+==Shots==
+Number of shots to shoot. Set to zero to shoot until one of the shutdown conditions is reached.
+
+==Interval Sec/10==
+Minimum shooting interval, in 1/10ths of a second. Set to 0 to shoot as fast as possible.
+
+==Use raw==
+Control CHDK raw saving.
+* Default = Use current CHDK UI setting.
+* Yes = Save raw
+* No = Do not save raw
+
+==Disable Canon Dark Frame==
+Force canon dark frame subtraction off. This is useful to increase the shooting rate of long exposures. Standalone dark frames can be created and subtracted later.
+
+==Tv==
+Select a shutter speed from list of values, from 256 seconds to 1/64th.
+
+==Tv + sec==
+Add a specified number of seconds to the value above.
+
+==Tv + sec/10000==
+Add specified 1/10000ths of a second to the values above
+
+==Start delay (ms)==
+The number of milliseconds to wait before shooting starts. Use to allow vibrations from pressing the shutter to settle. Ignored if Start hour is not -1.
+
+==Start Hour (-1 off) / Start Min / Start Sec==
+Start at the given time according to the camera clock. Set hour to -1 to use delay instead. If the given time is more than 1 minute in the past, the time is assumed to be the next day. If the time is less than one minute in the past, the shooting starts immediately. While the camera waits, the set key can be used to toggle the display and show the remaining time, and the menu key exits.
+
+If the camera is in playback mode, it will switch to rec and set zoom and focus 15 seconds before the scheduled start time
+
+Beware that camera clocks can drift many seconds per day.
+
+==ISO (by CHDK)==
+ISO value to set, using CHDK overrides, in Canon display units. Ignored if 0.
+
+==ISO (by ISO mode)==
+ISO value to set, using Canon ISO modes.
+
+==Zoom mode==
+Control zoom override
+* "Off" = Zoom not be set by script, position was set prior to running the script will be used
+* "Pct" = Zoom value is treated as a percentage of total zoom range
+* "Step" = Zoom value is camera specific step
+
+==Zoom value==
+Value used if "Zoom mode" is not off.
+
+==Focus override mode==
+Control focus override and set preferred mode
+* "Off" = Focus not be set by script, mode and distance set prior to running the script will be used
+* "MF" = Prefer manual focus
+* "AFL" = Prefer AF Lock
+* "AF" = Prefer auto focus
+Some CHDK ports can only override focus in certain modes. If the preferred mode is not supported,
+the script will attempt to use a supported mode.
+
+==Focus dist (mm)==
+Focus distance in millimeters, if "Focus override mode" is not "Off".
+
+Notes:
+* There is no "infinity" setting, but using the maximum possible (9999999) value may be equivalent
+* Focus distances are not calibrated, so the value that gives best focus may be quite different from the actual subject distance. Some cameras may need to be focused closer than infinity to produce good images of distant objects, and some cameras may not be able to achieve good focus at all using overrides
+
+==Use cont. mode if set==
+Shoot by holding the shutter button down, if continuous shooting is enabled in the Canon menu. If not checked, or if continuous mode is not enabled in the Canon menu, shooting is done by holding down half shoot and clicking full. Continuous mode is faster on some cameras.
+
+==Display==
+Display power saving mode. On = always on, Off use set_lcd_display off. Blt_Off use set_backlight every shot. Pressing set while the script is running will turn the display on for 30 sec.
+
+==Shutdown on finish==
+Shutdown after "shots" images are taken.
+
+==Shutdown on low battery==
+Shutdown if the battery voltage falls below the CHDK OSD low battery value.
+
+==Shutdown on low space==
+Shutdown if the SD card space falls below 50 MB.
+
+==Make dark frames==
+Shoot with the shutter closed. Requires "Enable Lua Native Calls" be set in the CHDK menu.
+
+==Log mode==
+If enabled, the log is written to A/fixedint.csv
+* None = do not record a log
+* Append = append to existing log
+* Replace = replace any existing log
+
+=Log file description=
+The log is a CSV file. The exposure settings are logged recorded in the desc column of the first row. Timing, temperature and memory information is logged per shot.

@@ -1,0 +1,8 @@
+# .txt files go in zip, windows EOLs
+*.txt text eol=crlf
+*.wiki text eol=crlf
+# sources always LF, want LF on cam for size
+*.lua text eol=lf
+*.mk text eol=lf
+Makefile text eol=lf
+*.md text

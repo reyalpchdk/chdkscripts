@@ -1,0 +1,431 @@
+rawopint v0.26 - Fast, accurate intervalometer with raw exposure metering
+
+=Overview=
+This script requires CHDK 1.5.1 or later.
+
+The basic idea is to shoot rapidly without invoking Canon firmware auto-focus or auto-exposure between shots. The exposure for each subsequent shot is calculated from the previous image data. Shooting is done either using Canon continuous mode with delays inserted to maintain the desired interval, or by simulating holding the shutter button at half press and repeatedly clicking full press. In continuous mode, the script can achieve a frame rate close to the Canon continuous shooting specification.
+
+This script is intended for situations where a relatively high frame rate, smooth exposure change and fixed focus are desired. Because exposure is calculated from the raw image data, it performs well in low light but may not perform well in situations where the light changes rapidly. It is well suited for daytime landscapes, clouds, sunsets, sunrises etc.
+
+This is still under development, and is not considered entirely finished. In particular:
+* Doesn't handle aperture adjustments yet. This means the initial aperture value set by the canon firmware or CHDK overrides will be used for every shot.
+* Over exposure control doesn't deal well with really strict limits.
+* There are too many options, and their meanings are not clear.
+* There are not enough options to adjust all the things a user might want to adjust.
+Despite the above, it can still produce good results in many situations.
+
+==Change History==
+===Version 0.26 - in progress ===
+* CHDK 1.5.1 or later required
+* ND value and initial ND state now automatically detected for most ports.
+* ND should work on most cameras in "quick" mode
+* Canon RAW/JPEG setting can be set on cameras with native raw support.
+* JPEG size setting will avoid unsupported values on propset > 6 cams
+* Fixed some cases where some cameras would take an extra shot at script exit
+* Removed non-working simulation option
+* Fixed bug which caused Ev shift to result in incorrect Bv / Ev shift values, even when Bv / Ev shift was not enabled
+* Add meter96_tgt column, records target meter96 with Ev shifts applied
+* Add options to control smoothing, based on suggestion by dolomiti_timelapse https://chdk.setepontos.com/index.php?topic=12697.msg146625#msg146625
+* Convert ev_change to imath so final change values are rounded
+* Fixed bug in "Smooth overshoot" logic which caused flickering in some situations
+
+===Version 0.25 - May 6, 2018===
+* Add workaround to prevent aperture changes on cameras incorrectly defined to have ND even when ND threshold is disabled. Thanks c_joerg for reporting
+* Added options to start at a particular clock time
+* Added options for zoom and focus distance
+
+===Version 0.24 - Mar 4, 2018===
+* Fixed bug that prevented intervals > ~10 seconds from working. Thanks SkepticaLee for the report.
+* Removed "Force initial ND" option. Cameras formerly thought to have a "hidden" ND without detectable state are now known to operate on the aperture. To use ND control on these cameras (not recommended), set the aperture to full open in the Canon firmware. If ND state isn't detected correctly on a camera with manual ND, set it open in the Canon firmware.
+
+===Version 0.23===
+* Add support for ND filter control on cameras with both ND and iris.
+* Add options "ND value", "Force initial ND" and "ND hysteresis". See option descriptions below for details and caveats.
+
+===Version 0.22===
+* If "ISO Adj Tv" is set longer than "Max Tv", it is now set to "Max Tv", meaning the ISO adjustment will start when shutter adjestment ends. This fixes a bug where the "Max Tv" limit would be ignored. To disable ISO adjustment, set "Target ISO" and "Max ISO" to the same value. Thanks SkepticaLee for the report.
+* Add battery temperature to log.
+
+===Version 0.21===
+* Fixed a bug that caused exposure to stop increasing when Max ISO was hit, regardless of Max Tv. Thanks udo for the report.
+
+===Version 0.20===
+* Added USB remote interval control option
+
+===Version 0.19===
+* Added interval warning LED and beep options, suggested by c_joerg in http://chdk.setepontos.com/index.php?topic=11081.msg125794#msg125794
+* Changed some defaults. Meter now defaults to 90%, meter step 15.
+* Log mode now has options for "none", "replace" and "append", defaults to append.
+* Fix delay on script exit reported by c_joerg in http://chdk.setepontos.com/index.php?topic=11081.msg125651#msg125651
+
+=Links=
+Discussion / Bug reporting thread:
+http://chdk.setepontos.com/index.php?topic=12697.0
+
+Wiki page for the latest version of the script and this documentation:
+http://chdk.wikia.com/wiki/Lua/Scripts:_Raw_Meter_Intervalometer
+
+Github repo with current development source:
+https://github.com/reyalpchdk/chdkscripts
+
+Earlier discussion can be found in the raw hook development thread:
+http://chdk.setepontos.com/index.php?topic=11081.msg119265#msg119265
+
+Many of the concepts in the script and CHDK shooting hooks were inspired by Lapser's work in:
+http://chdk.setepontos.com/index.php?topic=8997.0
+
+=Script usage=
+This script has a lot of options which affect the final behavior. While the defaults can produce reasonable results in many situations, some experimentation is recommended to get a feel for the impact of the various options. The log file provides a wealth of information to understand what happened in a given run. Some general descriptions and usage guidelines are provided below.
+
+Terms like Ev and Bv below are used loosely to mean APEX-like increments of exposure and scene brightness, but may not correspond exactly to their APEX definitions. For a clear, detailed explanation of APEX, see http://dougkerr.net/Pumpkin/#APEX
+
+==Shooting interval==
+Under optimal conditions, the shortest achievable interval should be slightly more than the Canon continuous mode specification.
+
+If the interval is long enough to accommodate all processing, the interval between shots will be maintained with high accuracy, generally well under 1/10th of a second.
+
+Interval should be long enough that the camera can keep up, including time for metering and the actual exposure. For nighttime, sunrises or sunsets, exposure time can be significant. Canon firmware dark frame subtraction and noise reduction may also substantially reduce the achievable interval. These are described in the Exposure Limits section below.
+
+SD card firmware garbage collection, wear leveling etc. may cause shots to occasionally take much longer than normal. Unfortunately, this behavior is not well specified, and does not necessarily correspond to card cost or speed rating.
+
+==Metering and exposure control==
+Metering is done using an adjustable sized rectangle in the middle of the sensor, referred to below as the "meter". Additionally, a histogram of the entire sensor area is analyzed to limit the fraction of over and under exposed pixels to user specified ranges. The relative influence of these limits may be adjusted, and exposure changes are smoothed with simple exponential smoothing (https://en.wikipedia.org/wiki/Exponential_smoothing) by default to avoid flickering. The target exposure defaults to a "neutral" value, roughly equivalent to what the Canon firmware auto-exposure would use for an evenly lit subject.
+
+To meter the whole scene, use large meter height and width, e.g. 90%. Using 100% is not recommended, since masked areas, vignetting and other artifacts are often present at the extreme edges. Use smaller sizes for a "spot" meter. Note that the meter value is the average value of the metered area, so a scene that is half light and half shadow will be treated the same as a even value half way between the two.
+
+With the default settings, the influence of the meter, over and under exposure balance in way that tends to keep the whole scene reasonably well exposed, at the expense of allowing some under or over exposure. For some scenes, you may want to make one dominant over the others. For example, to keep the moon from getting over-exposed at night, the under exposure limits should be turned off. On the other hand, if the sun will pass through the scene, you may want an over exposure fraction heigh enough to let it be blown out, without driving the rest of the scene completely dark.
+
+===Bv /Ev Shift===
+By default, the script tries to keep the meter area at a fixed exposure value. This means the subject will stay the same brightness as lighting changes, which looks unnatural in many situations. For example, if a cloud passes in front of the sun, the shadows get lighter but the overall scene brightness changes little. Similarly, a sunset will only change colors without getting any darker, until the exposure limits are hit, at which point the scene rapidly darkens. The Bv / Ev Shift setting can be used to avoid this. This setting changes the target exposure (equivalent to an Ev shift in the Canon firmware P mode etc.) in response to the absolute brightness of the scene (Bv). A value of 30% means that for every stop of actual brightness, the exposure will change by ~1/3 of a stop. This shift is limited by the over and under exposure limits and the meter limits.
+
+The Bv/Ev shift base Ev controls what absolute brightness is unshifted (in other words, what real light level will correspond to "neutral" exposure.) This can either "first" to use the initial scene, or a fixed Bv value. For fixed values, a scene in mid-day sun is around 10, while indoor artificial lighting might be around 1. For a sunset, you could use "first", causing the scene to go from normal exposure to darkness. For a sunrise, using a daylight value like 10 would give better results.
+
+===Exposure limits===
+Very fast shutter speeds have been observed to cause unstable exposure. Setting Min Tv Sec/100K to less than or equal to the cameras factory shutter limit is suggested. High shutter speeds may also impact shutter life.
+
+Long exposures may trigger Canon dark frame subtraction, which doubles shooting time. This can be overridden in CHDK on most cameras, but quality may suffer.
+
+The Target ISO should normally be set to the lowest value supported by the Canon firmware. Setting it lower may result in incorrect exposure, visual artifacts, or crashes.
+
+High ISOs usually trigger noise reduction (separate from dark frame) which can substantially increase processing time and affect the ability of the script to maintain the desired interval. The value where this occurs is camera dependent, but is often at 400, 800 or 1600. Set the Max ISO to a value slightly below the value that triggers the "busy" screen to maintain shorter intervals.
+
+On cameras which have an ND filter, the ND will be put in or out based on the ND TV Sec/10000 setting. This is recommended to keep shutter speeds from getting too short. It may also reduce the impact of the sun being in the field of view.
+
+==Focus==
+The focus distance of the initial shot is used for all shots in a run. By default, the initial focus is determined by normal Canon and CHDK settings. You can use the "Focus override mode" and "Focus dist" options described below to set a specific focus distance, but CHDK focus control often has camera specific quirks so it may not work as expected.
+
+If available, setting focus through the Canon UI using Canon firmware MF or AF Lock mode should be reliable. For cameras without these options, the Canon "focus at infinity" option should generally work well for landscape scenes, but beware that it still autofocuses for the first shot, just with a preference for distant focus.
+
+==Controlling start time==
+The "Start hour", "Start min" and "Start sec" options allow you to set the script to start shooting at a particular camera clock time. When using this feature, starting the script with the camera in playback will preserve battery life, and on most P&S cameras should keep the shutter closed until shooting begins. When starting the script in playback mode, the focus option should be used to set focus distance, unless you have high confidence the scene will autofocus well. The CHDK OSD subject distance display may help you determine the correct focus distance.
+
+==Tethered shooting==
+As of chdkptp r832, the script can be used in conjunction with chdkptp to save files directly to a USB connected computer. A glue script is available in the chdkptp lua/extras directory. For additional details, see https://chdk.setepontos.com/index.php?topic=13386.msg136688#msg136688
+
+==Camera specific issues==
+* D10 has been observed shoot with the shutter closed with some combinations of settings, particularly if the debug OSD is off, and either raw hook sleep is zero, or disable script yield is not set. It's unclear whether this represents a hardware failure, or is a side effect of how the script interacts with the canon firmware. This has only been observed on one camera, and has not been seen other models. See http://chdk.setepontos.com/index.php?topic=12258.0
+* G1x has problems with ISO over 320. See http://chdk.setepontos.com/index.php?topic=12165.30 (these issues may be resolved in current CHDK versions)
+* SX230 has problems with raw in continuous mode.
+
+==Tuning==
+The script has a lot of options which interact in non-obvious ways. The log file can provide insight into why the script behaved in a particular way. The _weight columns show the relative contribution of meter, under exposure protection and over exposure protection to the final exposure value.
+
+=Examples=
+* Moonrises, with settings posted
+** http://chdk.setepontos.com/index.php?topic=11081.msg124282#msg124282
+** http://chdk.setepontos.com/index.php?topic=11081.msg124314#msg124314
+* Moonrise, sunset https://www.youtube.com/watch?v=XguvoBYP2vE
+* Sunset, clouds, moonset https://www.youtube.com/watch?v=OIPLE-G8QKw
+Note the settings described in posts linked above may not be for the most recent version of the script. Saved script settings files posted in the forum are generally only valid for the specific version they were saved with.
+
+From users
+* Markb https://chdk.setepontos.com/index.php?topic=12766.0 (includes extensive discussion of settings)
+* c_joerg https://chdk.setepontos.com/index.php?topic=12761.0
+
+=Script Options=
+Note on units: In option names, foo/N means that foo is expressed in units of 1/Nth of a foo. So "Interval sec/10" means the shooting interval value is set in tenths of a second.
+
+==Shots==
+Number of shots. If set to 0, script will shoot unlimited shots until the menu key pressed or low battery/low remaining space conditions are met.
+
+==Interval sec/10==
+Time between shots, in 10ths of a second.
+
+==USB remote interval control==
+Uses the CHDK [https://chdk.fandom.com/wiki/USB_Remote USB Remote] to trigger shooting. In this mode, the script will wait up to the interval value for a pulse (low-hi-low) on the USB power input. If a pulse isn't received in time, it will shoot anyway. If the pulse is received during the shooting process, the next shot will trigger as soon as the possible. The CHDK USB remote enable option will be set by the script if this option is enabled, and restored to its previous state on script exit. If the script is ended with the menu key, one additional shot may be taken.
+
+==Meter width %==
+Width of meter area, in percent of active area.
+
+==Meter height %==
+Height of meter area, in percent of active area.
+
+==Meter step==
+Every step-th pixel is measured. To sample all colors, it should be odd.
+To prevent overflow, the total number of pixels (size/step)^2 must be less than unsigned_max / white_level. (~1M for 12 bpp, 250K for 14 bpp). Larger numbers of pixels will be slower.
+
+==Max Ev change==
+Maximum exposure change in a single step, in fractions of a stop. By default, the actual exposure change is smoothed, so the max value will be only used if there is a sufficiently large, consistent trend in scene brightness.
+
+==Ev smooth factor*10==
+Smoothing factor for exponential smoothing, multiplied by 10.  0 = no smoothing
+
+==Ev smooth limit frac*10==
+Factor to reduce influence of smoothing in cases where it would move exposure away from the target exposure. 0 = smoothed value is used unmodified. 10 = smoothed value is ignored in the following cases:
+* "Overshoot" where the magnitude of the smoothed change is greater than the magnitude of the calculated change.
+* Smoothing pushing the exposure in the wrong direction. That is, if the sign of the calculated ev_change and the smoothed ev_change are opposite.
+
+Higher values reduce the tendency of smoothing to cause oscillation after large exposure changes, but can increase the influence of short term changes in a sustained trend.
+
+==Ev change reverse frac*10==
+When the direction (sign) of calculated exposure change after smoothing reverses, the magnitude of the change is reduced by frac. 0 = Change is set to 0. 10 - calculated change is used unmodified.
+
+Lower values damp oscillation but make the script respond more slowly to real changes.
+
+==Use initial Ev as target==
+Use the exposure of the initial shot as the target Ev instead of the pre-defined neutral value.
+
+==Ev Shift==
+Shift the target exposure by specified number of stops. If "Use initial Ev as target" is enabled, the shift is applied to the initial value. Otherwise, it is relative to the neutral value.
+
+==Bv Ev shift %==
+Vary target Ev (exposure) based on absolute scene brightness, so every stop of scene brightness from the base Bv corresponds to x % change in target Ev. The range is limited by Meter thresh and limit options described below.
+
+Use the option to make the exposure follow scene brightness, so for example, a sunset will get darker instead of maintaining constant exposure.
+
+==Bv Ev shift base Ev==
+If Bv Ev shift is in effect, this sets the Bv at which the target Ev will equal the initial target Ev. If set to "First", the Bv of the first shot is used. A light surface in mid day sun is around 10.
+
+==Max Tv Sec/1000==
+Longest shutter speed to use, in 1/1000ths of a sec. If required exposure is longer, ISO will be used up to ISO limits.
+
+==Min Tv Sec/100K==
+Shortest shutter speed to use, in 1/100000ths of a sec. If required exposure is shorter, it will be limited to this value.
+
+==Target ISO==
+ISO value to use if shutter limits (described below) not reached. Should normally be lowest ISO. In Canon UI units.
+
+==ISO adj TV Sec/1000==
+Shutter speed (in 1/1000ths of a sec) at which ISO will start to be increased. If the exposure time exceeds this value, exposure will changes are split 50/50 between shutter and ISO, subject to Max ISO and Max Tv limits.
+
+==Max ISO==
+Absolute max ISO to be used. In Canon UI units. Set Max ISO equal to target to disable ISO adjustment.
+
+==ND Tv Sec/10000==
+Shutter speed (in 1/10000ths of a sec) below which ND filter is put in. 0 disables.
+
+==ND hysteresis Ev==
+Fractions of a stop shutter speed must fall below "ND Tv Sec/10000" before the ND is put out. This will limit "flapping" if the light level is fluctuating near the point where the ND filter is put in.
+
+==ND value APEX*96==
+Exposure value of the ND filter, in APEX*96 units. The default (0) uses the Canon firmware value, which should which should be within a few APEX*96 units on most cameras. If you want to calibrate the ND value of your specific camera, you can use the ndtest.lua script included in the CHDK SCRIPTS/TEST directory.
+
+==Meter high thresh Ev==
+Meter value in to start limiting under exposure protection, in stops above neutral. As the meter value exceeds this value, the influence of under exposure protection and positive Bv / Ev shift is reduced.
+
+==Meter high limit Ev==
+Maximum meter value allowed from under exposure protection, in stops above neutral.
+
+==Meter high max weight==
+Controls the maximum influence of the meter high limit relative to histogram under exposure. The influence of the meter increases proportional to the square of the fraction by which it exceeds the threshold, such that the max weight value is be reached at the limit Ev. If set to 100 (the standard weight before threshold), this behavior is disabled.
+
+==Meter low thresh Ev==
+Meter value to start limiting over-exposure protection, in stops below neutral. As the meter value falls the number of stops specified below neutral, the amount that over exposure protection or Bv / Ev shift can reduce exposure is reduced.
+
+==Meter low limit Ev==
+Minimum meter value allowed from over exposure protection, in stops below neutral.
+
+==Meter high max weight==
+Controls the maximum influence of the meter high limit relative to histogram over exposure, similar to max weight.
+
+==Overexp thresh x/100k==
+The fraction in parts per 100,000 of pixels that must be near to white level to trigger over exposure protection.  0 Disables over exposure protection.
+
+Note: for low values to work, the histogram step (described below) must be set to allow a sufficient number of pixels to be sampled. If the threshold represents less than 10 pixels, a warning is recorded in the log.
+
+==Overexp Ev range==
+What fraction of a stop below white level is considered over exposed.
+
+==Overexp max weight==
+Maximum weight for over exposure protection. This controls how far beyond the overexposure threshold the weight continues to increase.
+
+==Overexp prio==
+Priority modifier for over exposure protection. If greater than 0, the weight of under exposure and meter driven exposure increases is reduced proportional to the amount of over exposure, such that the "prio" value is subtracted from the weight when overexp thresh is reached.
+
+==Underexp thresh x/100k==
+Similar to overexp thresh above, but for pixels near black level. 0 Disabled under exposure protection.
+
+==Underexp -Ev==
+Number of stops below neutral a value must be to count as underexposed.  Pixels with 0-4 histogram value are not counted as underexposure, since this usually indicates defective pixels.
+
+==Underexp max weight==
+Maximum weight for under exposure protection, similar to Overexp max weight above.
+
+==Underexp prio==
+Priority modifier for under exposure protection, similar to Overexp prio above.
+
+==Histogram step==
+The step between pixels sampled for under / over protection. Smaller values sample more pixels, allowing smaller areas to be detected and lower under/over thresholds to be used, at the expense of increased processing time. On D10 (12 megapixel) a step of 11 samples ~100k pixels, and takes 60-70ms to process, equating to ~1500 pixels/msec.
+
+==Zoom mode==
+Control zoom override
+* "Off" = Zoom not be set by script, position was set prior to running the script will be used
+* "Pct" = Zoom value is treated as a percentage of total zoom range
+* "Step" = Zoom value is camera specific step
+
+==Zoom value==
+Value used if "Zoom mode" is not off.
+
+==Focus override mode==
+Control focus override and set preferred mode
+* "Off" = Focus not be set by script, mode and distance set prior to running the script will be used
+* "MF" = Prefer manual focus
+* "AFL" = Prefer AF Lock
+* "AF" = Prefer auto focus
+Some CHDK ports can only override focus in certain modes. If the preferred mode is not supported,
+the script will attempt to use a supported mode.
+
+==Focus dist (mm)==
+Focus distance in millimeters, if "Focus override mode" is not "Off".
+
+Notes:
+* There is no "infinity" setting, but using the maximum possible (9999999) value may be equivalent
+* Focus distances are not calibrated, so the value that gives best focus may be quite different from the actual subject distance. Some cameras may need to be focused closer than infinity to produce good images of distant objects, and some cameras may not be able to achieve good focus at all using overrides
+
+==Image size==
+Override Canon jpeg resolution. "Default" uses current Canon UI setting, remaining values correspond to Canon UI. Not all values are valid on all cameras, and sizes for some modes vary between models. L should always be full resolution. For others, the script will attempt to use the closest equivalent mode.
+
+==Use CHDK raw==
+Override current CHDK raw setting. "Default" uses current CHDK UI setting, otherwise, force on or off.
+
+==Canon image format==
+For cameras that support raw in the Canon firmware, set Canon raw/jpeg setting. "Default" uses the current setting.
+
+Note: On some cameras, Canon raw is an image resolution setting, so the script "Image size" setting will be ignored if Canon raw is enabled, and "Large" will be used if raw+jpeg is selected.
+
+==Use cont. mode if set==
+Shoot by holding the shutter button down, if continuous shooting is enabled in the Canon menu. If not checked, or if continuous mode is not enabled in the Canon menu, shooting is done by holding down half shoot and clicking full.
+
+==Start hour (-1 off) / Start min / Start sec==
+Start at the given time according to the camera clock. Set hour to -1 to use delay instead. If the given time is more than 1 minute in the past, the time is assumed to be the next day. If the time is less than one minute in the past, the shooting starts immediately. While the camera waits, the set key can be used to toggle the display and show the remaining time, and the menu key exits.
+
+If the camera is in playback mode, it will switch to rec and set zoom and focus 15 seconds before the scheduled start time
+
+Beware that camera clocks can drift many seconds per day.
+
+==Display==
+Display power saving mode.
+* On = always on
+* Off use set_lcd_display off
+* Blt_Off use set_backlight every shot
+Pressing set while the script is running turns the display on for 30 sec.
+
+==Shutdown on finish==
+Shutdown after "shots" images are taken.
+
+==Shutdown on low battery==
+Shutdown if the battery voltage falls below the CHDK OSD low battery value.
+
+==Shutdown on low space==
+Shutdown if the SD card space falls below 50 MB.
+
+==Interval warn LED==
+Blink LED if shooting falls below the rate specified by Interval above.
+
+The mapping of LED numbers to LEDs is cameras specific, and not all cameras support script LED control.
+
+==Interval warn beep==
+Play a beep if shooting falls below the rate specified by Interval above.
+
+The beep will only be played the Canon UI has not been set to Mute.
+
+==Draw Debug info==
+Draw metering information on the raw buffer. From top to bottom
+# A bar near the top of the screen, representing the metered value as a % of white level (log scale), with tick marks at 1 EV intervals. The larger ticks are black level, neutral, white level, and Ev shift if enabled. Yellow and red ticks above the bar show the meter thresh and limit values, respectively.
+# A bar showing the change in exposure as a fraction of the max EV change value described below. The origin is at the center, with longer exposure to the right, and shorter exposure to the left.
+# A bar extending from left to right, representing % underexposed pixels. Red if above threshold, max at middle of screen.
+# A bar extending from right to left, representing % overexposed pixels. Red if above threshold, max at middle of screen.
+# A box or reticle around the meter area, controlled by Meter Area option below
+Drawing takes adds a small amount to shooting time (e.g. 20 ms on d10.) The log contains this information and much more, but having it in the images makes it easier to see what the code is doing.
+
+==Meter Area==
+Controls whether the metering area is drawn, either just the corners or a box
+
+==Gauge Y offset %==
+Controls the vertical location of the debug info, in % of full resolution jpeg area height. 0 uses a default offset of 80 pixels. Use to make the debug info visible on jpegs with a different aspect ration form the sensor.
+
+==Log mode==
+If enabled, the log is written to A/rawopint.csv
+* None = Do not record a log.
+* Append = append to existing log. A new header row is written each time the script is started.
+* Replace = Replace any existing log.
+The log is described in more detail below.
+
+==Raw hook sleep==
+Insert a script sleep just before the raw hook is released. This appears to avoid issues with D10 taking some shots with the shutter closed when debug drawing is not enabled.
+
+==Disable script yield==
+Disable automatic script yielding. May prevent D10 shutter issues mentioned above, and possibly reduce interval. May have other side effects.
+
+=Log file description=
+The log is a CSV with a bunch of columns. Some of the more relevant/useful ones are described below.
+
+Values in the first line of data are from the pre-shoot before the first shot. The desc column in this line includes a summary of script settings, chdk version, and zoom + focus state.
+
+==sv, tv, av==
+exposure values for the shot with the image number indicated in the exp column. Note the aperture (Av) is not controlled by the script, but on cameras without an adjustable aperture, the ND value is added to the Av value when the ND is active.
+
+==bv96==
+Scene brightness in APEX*96 units. For pre-shoot, this comes from the canon firmware. Otherwise, calculated from exposure params and meter value. The calculated value only roughly corresponds to the real definition of Bv.
+
+==meter, meter96==
+Average value of the metered area: meter is the raw sensor value, *96 gives this as an APEX96 value where the target exposure is 0. In meter96, negative values indicate an underexposure, positive is overexposure.
+
+==meter96_tgt==
+Target meter96 value, after any initial Ev shift and Bv shift are applied.
+
+==over_frac, under_frac==
+Fraction of pixel in the over and under ranges, in percent.
+
+==meter_weight, over_weight, under_weight==
+Weights controlling the relative contribution of the meter area, under and over exposure protection to the final exposure change.
+
+==bv_ev_shift==
+The amount the target Ev was shifted to reflect scene brightness, in APEX*96 units.
+
+==d_ev==
+Exposure change requested for the next shot. Positive values mean more exposure (longer Tv, higher ISO)
+
+Additional fields record the various stages of the exposure change smoothing and rounding:
+* d_ev_base - Change calculated to reach the target exposure, subject to max_ev_chage, and over/under exposure limits
+* d_ev_s1 - Change with exponential smoothing applied
+* limit_s - 1 if "Ev smooth limit frac" logic was applied
+* d_ev_s2 - Exposure change after "Ev smooth limit frac"
+* limit_r - 1 if "Ev change reverse" logic was applied
+* d_ev_f - Final exposure change, before rounding to integer
+
+==desc==
+various cases in the metering process trigger messages here, e.g if shutter limits hit etc. The first row contains initial settings.
+
+==sleep==
+How long the script waited between shots. Negative values mean the script wasn't able to maintain the requested frame rate.
+
+==start==
+The tick count (milliseconds since boot) of the start of the main loop. The values of shoot_ready, exp_start, raw_ready and raw_done are offsets form this value
+
+=Control keys=
+Pressing menu ends the script. Pressing set turns on the display for 30 sec.
+
+=Information for developers=
+The code is broken up into several isolated "modules" for easier understanding and re-use. For ease of distribution, the "modules" are built into a single Lua file, using a python script in the source repo. Modules are wrapped in a function and have the start and end indicated with comments like
+
+ -- inline reylib/csvlog
+ -- end inline reylib/csvlog
+
+Each module is a Lua table which encapsulates the required state and methods. However, some modules assume that other modules are present, for example, the exposure module requires that the log module be included and configured with the appropriate fields.
+
+If you wish to modify the script, you edit the final built script rather than building form the source.
+
+Following the modules, the section starting at
+ -- main script initialization
+converts values from the CHDK script menu.  Values directly derived from the CHDK script menu are prefixed with ui_, and are not used directly inside any of the modules.  In many cases, the values need to be translated to different units for the script. UI values ending with _e are "enum" values, where the UI value is used to look up a value.

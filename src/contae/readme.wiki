@@ -1,0 +1,193 @@
+contae.lua v0.11 Raw meter based auto exposure for continuous shooting
+
+=Overview=
+This script requires CHDK 1.4.1 or later
+
+The basic idea is the script adjusts exposure after each shot in a continuous sequence to avoid over or under exposure in the next shot.
+
+==Change History==
+===Version 0.12===
+* If "ISO Adj Tv" is set longer than "Max Tv", it is now set to "Max Tv", meaning the ISO adjustment will start when shutter adjestment ends. This fixes a bug where the "Max Tv" limit would be ignored. To disable ISO adjustment, set "Target ISO" and "Max ISO" to the same value. Thanks SkepticaLee for the report.
+* Fixed bug that where some display would freeze until the end of the raw timeout at the end of a continuous burst.
+
+===Version 0.11===
+Fixed a bug that caused exposure to stop increasing when Max ISO was hit, regardless of Max Tv. Thanks udo for the report.
+
+=Links=
+Discussion / Bug reporting thread:
+http://chdk.setepontos.com/index.php?topic=12696.0
+
+Wiki page for the latest version of the script and this documentation:
+http://chdk.wikia.com/wiki/Lua/Scripts:_Continuous_Autoexposure
+
+Github repo with current development source:
+https://github.com/reyalpchdk/chdkscripts
+
+=Script usage=
+When the script is running, keys like set, up, down, left, right, half shoot are passed to the Canon firmware. Menu exits the script.
+
+When full shoot is pressed, a shooting burst starts. The first shot in the burst uses the exposure set by the Canon firmware, possibly modified by Ev shift options described below. Exposure of subsequent shots in the burst are based on analyzing the raw buffer. The burst continues as long as the shutter is held down. If the camera is not in Canon continuous mode, the shooting is done by simulating holding half press and clicking full press for each shot. The shooting rate in this mode may be similar to, or slower than Canon continuous mode depending on the camera.
+
+If you hold the shutter down while starting the script, it will half shoot and start a burst as soon as it is ready.
+
+The metering is done using an adjustable sized rectangle in the middle of the sensor, and the script normally tries to keep this at the "neutral" value. Additionally, a histogram of the entire sensor is used to limit amount of over and under exposed pixels in the entire scene to user specified ranges.
+
+This is under development and not completed. In particular:
+* Doesn't handle aperture adjustments yet. This means the initial aperture value set by the Canon firmware or CHDK overrides will be used for every shot.
+* ND filter control is only available on cameras without an adjustable aperture, and the ND value may be inaccurate if the canon firmware did not set the ND filter in for the first exposure.
+* There are too many options, and their meanings are not clear.
+* Not all Canon controls are passed though.
+
+Earlier development discussion can be found in the script hook development thread:
+http://chdk.setepontos.com/index.php?topic=11081.msg119265#msg119265
+
+=Example=
+The sequence of images in this box.com folder https://app.box.com/s/swbohabs7cw173scxwm780784evuschu shows the script in operation, with the debug overlay enabled.
+
+
+=Script options=
+
+==Meter width %==
+Width of meter area, in percent of active area.
+
+==Meter height %==
+Height of meter area, in percent of active area.
+
+==Meter step==
+Ever step-th pixel is measured. To sample all colors, it should be odd.
+To prevent overflow, the total number of pixels (size/step)^2 must be less than unsigned_max / white_level. (~1M for 12 bpp, 250K for 14 bpp). Larger numbers of pixels will be slower.
+
+==Max Ev change==
+Maximum exposure change in a single step, in fractions of a stop.
+
+==Ev smooth factor*10==
+Smoothing factor for exponential smoothing, multiplied by 10.  0 = no smoothing
+
+==Ev smooth limit frac*10==
+Factor to reduce influence of smoothing in cases where it would move exposure away from the target exposure. 0 = smoothed value is used unmodified. 10 = smoothed value is ignored in the following cases:
+* "Overshoot" where the magnitude of the smoothed change is greater than the magnitude of the calculated change.
+* Smoothing pushing the exposure in the wrong direction. That is, if the sign of the calculated ev_change and the smoothed ev_change are opposite.
+
+Higher values reduce the tendency of smoothing to cause oscillation after large exposure changes, but can increase the influence of short term changes in a sustained trend.
+
+==Ev change reverse frac*10==
+When the direction (sign) of calculated exposure change after smoothing reverses, the magnitude of the change is reduced by frac. 0 = Change is set to 0. 10 - calculated change is used unmodified.
+
+Lower values damp oscillation but make the script respond more slowly to real changes.
+
+==Use initial Ev as target==
+Use the exposure of the initial shot as the target Ev instead of the pre-defined neutral value.
+
+==Ev Shift==
+Shift the target exposure by specified number of stops. If "Use initial Ev as target" is enabled, the shift is applied to the initial value. Otherwise, it is relative to the neutral value.
+
+==Max Tv Sec/1000==
+Longest shutter speed to use, in 1/1000ths of a sec. If required exposure is longer, ISO will be used up to ISO limits.
+
+==Min Tv Sec/100K==
+Shortest shutter speed to use, in 1/100000ths of a sec. If required exposure is shorter, it will be limited to this value.
+
+==Target ISO==
+ISO value to use if shutter limits (described below) not reached. Should normally be lowest ISO. In Canon UI units.
+
+==ISO adj TV Sec/1000==
+Shutter speed (in 1/1000ths of a sec) at which ISO will start to be increased. If the exposure time exceeds this value, exposure will changes are split 50/50 between shutter and ISO, subject to limits below. Set Max ISO equal to this value to disable ISO adjustment.
+
+==Max ISO==
+Absolute max ISO to be used. In Canon UI units.
+
+==ND Tv Sec/10000==
+Shutter speed (in 1/10000ths of a sec) below which ND filter is put in. Ignored on cameras with an adjustable aperture, even if they also have an ND filter. 0 disables.
+
+==Meter high thresh Ev==
+Meter value in to start limiting under exposure protection, in stops above neutral. As the meter value exceeds this value, the influence of under exposure protection is reduced.
+
+==Meter high limit Ev==
+Maximum meter value allowed from under exposure protection, in stops above neutral.
+
+==Meter high max weight==
+Controls the maximum influence of the meter high limit relative to histogram under exposure. The influence of the meter increases proportional to the square of the fraction by which it exceeds the threshold, such that the max weight value is be reached at the limit Ev. If set to 100 (the standard weight before threshold), this behavior is disabled.
+
+==Meter low thresh Ev==
+Meter value to start limiting over-exposure protection, in stops below neutral. As the meter value falls the number of stops specified below neutral, the amount that over exposure protection can reduce exposure is reduced.
+
+==Meter low limit Ev==
+Minimum meter value allowed from over exposure protection, in stops below neutral.
+
+==Meter high max weight==
+Controls the maximum influence of the meter high limit relative to histogram over exposure, similar to max weight.
+
+==Overexp thresh x/100k==
+The fraction in parts per 100,000 of pixels that must be near to white level to trigger over exposure protection.  0 Disables over exposure protection. Note: for low values to work, the histogram step (described below) must be set to allow a sufficient number of pixels to be sampled. If the threshold represents less than 10 pixels, are warning is recorded in the log.
+
+==Overexp Ev range==
+What fraction of a stop below white level is considered over exposed.
+
+==Overexp max weight==
+Maximum weight for over exposure protection. This controls how far beyond the overexposure threshold the weight continues to increase.
+
+==Overexp prio==
+Priority modifier for over exposure protection. If greater than 0, the weight of under exposure and meter driven exposure increases is reduced proportional to the amount of over exposure, such that the "prio" value is subtracted from the weight when overexp thresh is reached.
+
+==Underexp thresh x/100k==
+Similar to overexp thresh above, but for pixels near black level. 0 Disabled under exposure protection.
+
+==Underexp -Ev==
+Number of stops below neutral a value must be to count as underexposed.  Pixels with 0-4 shot histogram value are not counted as underexposure, since this usually indicates defective pixels.
+
+==Underexp max weight==
+Maximum weight for under exposure protection, similar to Overexp max weight above.
+
+==Underexp prio==
+Priority modifier for under exposure protection, similar to Overexp prio above.
+
+==Histogram step==
+The step between pixels sampled for under / over protection. Smaller values sample more pixels, allowing smaller areas to be detected and lower under/over thresholds to be used, at the expense of increased processing time. On D10 (12 megapixel) a step of 11 samples ~100k pixels, and takes 60-70ms to process, equating to ~1500 pixels/msec.
+
+==Draw Debug info==
+Draw metering information on the raw buffer. From top to bottom
+# A bar near the top of the screen, representing the metered value as a % of white level (log scale), with tick marks at 1 EV intervals. The larger ticks are black level, neutral, white level, and Ev shift if enabled. Yellow and red ticks above the bar show the meter thresh and limit values, respectively.
+# A bar showing the change in exposure as a fraction of the max EV change value described below. The origin is at the center, with longer exposure to the right, and shorter exposure to the left.
+# A bar extending from left to right, representing % underexposed pixels. Red if above threshold, max at middle of screen.
+# A bar extending from right to left, representing % overexposed pixels. Red if above threshold, max at middle of screen.
+# A box or reticle around the meter area, controlled by Meter Area option below
+Drawing takes adds a small amount to shooting time (e.g. 20 ms on d10.) The log contains this information and much more, but having it in the images makes it easier to see what the code is doing.
+
+==Meter Area==
+Controls whether the metering area is drawn, either just the corners or a box
+
+==Gauge Y offset %==
+Controls the vertical location of the debug info, in % of full resolution jpeg area height. 0 uses a default offset of 80 pixels. Use to make the debug info visible on jpegs with a different aspect ration form the sensor.
+
+==Log mode==
+If enabled, the log is written to A/contae.csv
+* None = do not record a log
+* Append = append to existing log
+* Replace = replace any existing log
+
+==Raw hook sleep==
+Insert a script sleep just before the raw hook is released. This appears to avoid issues with D10 taking some shots with the shutter closed when debug drawing is not enabled.
+
+=Log file description=
+The log is a CSV with a bunch of columns. Some of the more relevant/useful ones are described below.
+
+==sv, tv, av==
+Exposure values for the shot with the image number indicated in the exp column.
+
+==bv96==
+Scene brightness. For pre-shoot, this comes from the Canon firmware. Otherwise, calculated from exposure params and meter value.
+
+==meter, meter96==
+the average value of the metered area. *96 gives this as an APEX96 value where the target exposure is 0. Negative values indicate an underexposure, positive is overexposure.
+
+==over_frac, under_frac==
+Fraction of pixel in the over and under ranges, in percent.
+
+==meter_weight, over_weight, underweight==
+Weights controlling the relative contribution of the meter area, under and over exposure protection to the final exposure change.
+
+==d_ev==
+Exposure change requested for the next shot. Positive values mean more exposure (longer Tv, higher ISO)
+
+==desc==
+various cases in the metering process trigger messages here, e.g if shutter limits hit etc.
