@@ -4,5 +4,6 @@
 # sources always LF, want LF on cam for size
 *.lua text eol=lf
 *.mk text eol=lf
+*.py text eol=lf
 Makefile text eol=lf
 *.md text

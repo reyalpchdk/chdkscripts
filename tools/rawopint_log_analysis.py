@@ -2,10 +2,12 @@ import csv
 import re
 
 class RawOpData:
-    apex96_cols=['sv96','tv96','av96','bv96','meter96','meter96_tgt','bv_ev_shift','d_ev']
-    frac_cols=['over_frac','under_frac']
-    weight_cols=['meter_weight','over_weight','under_weight']
-    ev_change_cols=['d_ev_base','d_ev_s1','d_ev_s2','d_ev_f'] #apex96, but smaller values, float
+    # these column lists included some columns only present in newer versions
+    # filtered in constructor below
+    all_apex96_cols=['sv96','tv96','av96','bv96','meter96','meter96_tgt','bv_ev_shift']
+    all_frac_cols=['over_frac','under_frac']
+    all_weight_cols=['meter_weight','over_weight','under_weight']
+    all_ev_change_cols=['d_ev_base','d_ev_s1','d_ev_s2','d_ev_f','d_ev'] #apex96, but smaller values, some non-integer
     def __init__(self,fname):
         self.rows=[]
         self.cols={}
@@ -28,13 +30,19 @@ class RawOpData:
         for name in self.rows[0]:
             if name in {'date','time','desc'}:
                 self.cols[name] = [r[name] for r in self.rows]
-            elif name in set(self.apex96_cols) or name in set(self.weight_cols) or name=='exp':
+            elif name in set(self.all_apex96_cols) or name in set(self.all_weight_cols) or name=='exp':
                 self.cols[name] =[ None if r[name] == '' else int(r[name]) for r in self.rows]
             else:
                 self.cols[name] =[ None if r[name] == '' else float(r[name]) for r in self.rows]
 
             # convenience data.col_name for interactive stuff
             setattr(self,name,self.cols[name])
+
+        # make column lists for this instance to support older versions
+        self.apex96_cols = [x for x in self.all_apex96_cols if x in self.cols]
+        self.frac_cols = [x for x in self.all_frac_cols if x in self.cols]
+        self.weight_cols = [x for x in self.all_weight_cols if x in self.cols]
+        self.ev_change_cols = [x for x in self.all_ev_change_cols if x in self.cols]
 
         self.apex96_min = None
         self.apex96_max = None
@@ -148,9 +156,11 @@ class RawOpData:
         else:
             print(f"bv ev shift: {self.init_vals['bv_ev_shift_pct']}%"
                   f" base: {self.fmt_ini_ev96('bv_ev_shift_base_bv') if self.init_vals['bv_ev_shift_base_bv'] else 'First'}")
-        print(f"smooth factor: {self.init_vals['smooth_factor']/1000}"
-              f" limit: {self.init_vals['smooth_limit_frac']/1000}"
-              f" rev: {self.init_vals['ev_change_rev_frac']/1000}")
+        if 'smooth_factor' in self.cols:
+            print(f"smooth factor: {self.init_vals['smooth_factor']/1000}"
+                  f" limit: {self.init_vals['smooth_limit_frac']/1000}"
+                  f" rev: {self.init_vals['ev_change_rev_frac']/1000}")
+
         print(f"over thresh: {self.init_vals['over_thresh_frac']/10000}% margin: {self.fmt_ini_ev96('over_margin_ev')}")
         print(f"under thresh: {self.init_vals['under_thresh_frac']/10000}%  margin: {self.fmt_ini_ev96('under_margin_ev')}")
         print(f"meter high thresh: {self.fmt_ini_ev96('meter_high_thresh')}"
