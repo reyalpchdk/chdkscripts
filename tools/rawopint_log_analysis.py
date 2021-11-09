@@ -1,3 +1,19 @@
+# Copyright 2021 reyalp (at) gmail.com
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# module for loading / analyzing rawopint logs
+
 import csv
 import re
 
@@ -8,7 +24,10 @@ class RawOpData:
     all_frac_cols=['over_frac','under_frac']
     all_weight_cols=['meter_weight','over_weight','under_weight']
     all_ev_change_cols=['d_ev_base','d_ev_s1','d_ev_s2','d_ev_f','d_ev'] # apex96, but smaller values, some non-integer
-    def load_csv(fname):
+    col_groups=['apex96','frac','weight','ev_change']
+
+    @classmethod
+    def load_csv(cls,fname):
         '''class method to all runs in a CSV file and return array of each non-empty run as RawOpData'''
         runs = []
         run_rows = None
@@ -17,7 +36,7 @@ class RawOpData:
             for r in csv.reader(fh):
                 if r[0] == 'date':
                     if run_rows:
-                        runs.append(RawOpData(run_header,run_rows))
+                        runs.append(cls(run_header,run_rows))
                         run_rows = None
 
                     run_header = r
@@ -29,7 +48,7 @@ class RawOpData:
                     run_rows.append(r)
 
         if run_rows:
-            runs.append(RawOpData(run_header,run_rows))
+            runs.append(cls(run_header,run_rows))
 
         return runs
 
