@@ -7,26 +7,52 @@ class RawOpData:
     all_apex96_cols=['sv96','tv96','av96','bv96','meter96','meter96_tgt','bv_ev_shift']
     all_frac_cols=['over_frac','under_frac']
     all_weight_cols=['meter_weight','over_weight','under_weight']
-    all_ev_change_cols=['d_ev_base','d_ev_s1','d_ev_s2','d_ev_f','d_ev'] #apex96, but smaller values, some non-integer
-    def __init__(self,fname):
+    all_ev_change_cols=['d_ev_base','d_ev_s1','d_ev_s2','d_ev_f','d_ev'] # apex96, but smaller values, some non-integer
+    def load_csv(fname):
+        '''class method to all runs in a CSV file and return array of each non-empty run as RawOpData'''
+        runs = []
+        run_rows = None
+        run_header = None
+        with open(fname) as fh:
+            for r in csv.reader(fh):
+                if r[0] == 'date':
+                    if run_rows:
+                        runs.append(RawOpData(run_header,run_rows))
+                        run_rows = None
+
+                    run_header = r
+                else:
+                    if not run_header:
+                        raise ValueError(f'rows without recognized header in {fname}')
+                    if not run_rows:
+                        run_rows = []
+                    run_rows.append(r)
+
+        if run_rows:
+            runs.append(RawOpData(run_header,run_rows))
+
+        return runs
+
+    def __init__(self, header, data):
         self.rows=[]
         self.cols={}
 
-        with open(fname) as fh:
-            i = 0
-            for r in csv.DictReader(fh):
-                # first data row is preshoot values, not a shot, some values missing
-                # TODO handle multiple runs in a single file
-                if i == 0:
-                    self.preshoot_row = r
-                elif r['start'] == '': # keyboard and other exit conditions leave partial row
-                    self.quit_row = r
-                    break
-                else:
-                    self.rows.append(r)
-                i+=1
+        for rnum, rvals in enumerate(data):
+            row = {}
+            for i,name in enumerate(header):
+                row[name] = rvals[i]
+
+            if rnum == 0:
+                self.preshoot_row = row
+            elif row['start'] == '': # keyboard and other exit conditions leave partial row
+                self.quit_row = row
+                break
+            else:
+                self.rows.append(row)
+
         self.len = len(self.rows)
 
+        # TODO can be integrated with above now the CSV isn't loaded with DictReader
         for name in self.rows[0]:
             if name in {'date','time','desc'}:
                 self.cols[name] = [r[name] for r in self.rows]
@@ -156,7 +182,8 @@ class RawOpData:
         else:
             print(f"bv ev shift: {self.init_vals['bv_ev_shift_pct']}%"
                   f" base: {self.fmt_ini_ev96('bv_ev_shift_base_bv') if self.init_vals['bv_ev_shift_base_bv'] else 'First'}")
-        if 'smooth_factor' in self.cols:
+        # not present in 0.25
+        if 'smooth_factor' in self.init_vals:
             print(f"smooth factor: {self.init_vals['smooth_factor']/1000}"
                   f" limit: {self.init_vals['smooth_limit_frac']/1000}"
                   f" rev: {self.init_vals['ev_change_rev_frac']/1000}")
