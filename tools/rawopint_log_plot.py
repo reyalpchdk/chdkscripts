@@ -22,12 +22,34 @@ class RawOpDataPlot(RawOpData):
             names = [names]
 
         fig, ax = plt.subplots()
+        lines = []
         for name in names:
-            ax.plot(self.cols[name],label=name, **plot_options)
+            lines.append(ax.plot(self.cols[name],label=name, **plot_options)[0])
         ax.set_xlabel(xlabel)
         if ylabel:
             ax.set_ylabel(ylabel)
-        ax.legend()
+
+        # make legend toggle plots when using widget, based on
+        # https://matplotlib.org/stable/gallery/event_handling/legend_picking.html#sphx-glr-gallery-event-handling-legend-picking-py
+        leg = ax.legend()
+        leglines = leg.get_lines()
+        linemap = {}
+        for i,legline in enumerate(leglines):
+            legline.set_picker(True)
+            linemap[legline] = lines[i]
+
+        def on_leg_pick(event):
+            legline = event.artist
+            line = linemap[legline]
+            if line.get_visible():
+                line.set_visible(False)
+                legline.set_alpha(0.5)
+            else:
+                line.set_visible(True)
+                legline.set_alpha(1.0)
+            fig.canvas.draw()
+
+        fig.canvas.mpl_connect('pick_event',on_leg_pick)
 
     def plot_group(self, group, **kwargs):
         if not group in self.col_groups:
