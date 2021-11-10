@@ -17,21 +17,21 @@ from rawopint_log_analysis import RawOpData
 import matplotlib.pyplot as plt
 
 class RawOpDataPlot(RawOpData):
-    def plot(self, names, ylabel = None, xlabel='shot'):
+    def plot(self, names, ylabel = None, xlabel='shot', **plot_options):
         if type(names) == str:
             names = [names]
 
         fig, ax = plt.subplots()
         for name in names:
-            ax.plot(self.cols[name],label=name)
+            ax.plot(self.cols[name],label=name, **plot_options)
         ax.set_xlabel(xlabel)
         if ylabel:
             ax.set_ylabel(ylabel)
         ax.legend()
 
-    def plot_group(self, group, ylabel = None, xlabel='shot'):
+    def plot_group(self, group, **kwargs):
         if not group in self.col_groups:
             raise ValueError(f'unknown group {group}')
-        if not ylabel:
-            ylabel = group
-        self.plot(getattr(self,group+'_cols'),ylabel, xlabel)
+        if 'ylabel' not in kwargs:
+            kwargs['ylabel'] = group
+        self.plot(getattr(self,group+'_cols'),**kwargs)
