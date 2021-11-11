@@ -40,6 +40,22 @@ class RawOpDataPlot(RawOpData):
         return s
 
 
+    def plot_make_legend_toggle(self,legline,line):
+        '''
+        return a function that toggles line on and off
+        and toggles the alpha of legline between legline's original alpha and half
+        '''
+        orig_alpha = legline.get_alpha()
+
+        def toggle_fn():
+            if line.get_visible():
+                line.set_visible(False)
+                legline.set_alpha(orig_alpha*0.5)
+            else:
+                line.set_visible(True)
+                legline.set_alpha(orig_alpha)
+        return toggle_fn
+
     def plot(self, names, ylabel = None, xlabel='shot', label_cols = ['exp'], **plot_options):
         '''
         plot csv columns specified by 'names', which may be either a single string or array of strings
@@ -60,25 +76,18 @@ class RawOpDataPlot(RawOpData):
         if label_cols:
             ax.format_coord = lambda x,y: self.plot_format_coord(x, y, label_cols)
 
-        # make legend toggle plots when using widget, based on
+        # make legend toggle plots when using widget, loosely based on
         # https://matplotlib.org/stable/gallery/event_handling/legend_picking.html#sphx-glr-gallery-event-handling-legend-picking-py
         leg = ax.legend()
         leglines = leg.get_lines()
-        linemap = {}
+        line_toggles = {}
         for i,legline in enumerate(leglines):
             legline.set_picker(True)
-            linemap[legline] = lines[i]
+            line_toggles[legline] = self.plot_make_legend_toggle(legline,lines[i])
 
         def on_leg_pick(event):
             legline = event.artist
-            line = linemap[legline]
-            # bug - this doesn't honor lines original alpha
-            if line.get_visible():
-                line.set_visible(False)
-                legline.set_alpha(0.5)
-            else:
-                line.set_visible(True)
-                legline.set_alpha(1.0)
+            line_toggles[legline]()
             fig.canvas.draw()
 
         fig.canvas.mpl_connect('pick_event',on_leg_pick)
