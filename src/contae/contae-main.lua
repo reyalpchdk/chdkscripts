@@ -443,6 +443,7 @@ logdesc("platform:%s-%s-%s-%s %s %s",
 set_exit_key("menu")
 
 kb:handle_startup_shoot()
+shootctl:update_drive_mode() -- ensure drive mode initialized
 while true do
 	kb:update()
 	shootctl:update_drive_mode()
