@@ -12,14 +12,21 @@
 # You should have received a copy of the GNU General Public License
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# module for loading / analyzing rawopint logs
+'''
+module for loading / analyzing rawopint logs
+'''
 
 import csv
 import re
 
 class RawOpData:
-    # these column lists included some columns only present in newer versions
-    # filtered in constructor below
+    '''
+    class representing data from a rawopint run
+    each csv column is available as cols['name'] and instance.name
+    empty cells are represented as None
+    APEX*96 and weight and exposure number columns are converted to integer
+    other numeric columns are converted to float
+    '''
     all_apex96_cols=['sv96','tv96','av96','bv96','meter96','meter96_tgt','bv_ev_shift']
     all_frac_cols=['over_frac','under_frac']
     all_weight_cols=['meter_weight','over_weight','under_weight']
@@ -28,7 +35,7 @@ class RawOpData:
 
     @classmethod
     def load_csv(cls,fname):
-        '''class method to all runs in a CSV file and return array of each non-empty run as RawOpData'''
+        '''class method to load all runs in a CSV file and return array of each non-empty run as RawOpData'''
         runs = []
         run_rows = None
         run_header = None
@@ -107,8 +114,11 @@ class RawOpData:
 
         self.parse_init_vals()
 
-    # find the maximum value in a column and return the value, index and image number
     def find_max(self,colname):
+        '''
+        find the maximum value in a column and return the value, index and image number
+        returns None if no rows in the column contain data
+        '''
         m = None
         m_i = None
         for i,v in enumerate(self.cols[colname]):
@@ -122,6 +132,10 @@ class RawOpData:
         return m, m_i, self.cols['exp'][m_i]
 
     def find_min(self,colname):
+        '''
+        find the minimum value in a column and return the value, index and image number
+        returns None if no rows in the column contain data
+        '''
         m = None
         m_i = None
         for i,v in enumerate(self.cols[colname]):
@@ -197,6 +211,9 @@ class RawOpData:
         return f'{self.init_vals[name]/96:0.3g} ({self.init_vals[name]})'
 
     def summary(self):
+        '''
+        print a summary of camera information and script settings
+        '''
         print(f"{self.init_vals['platform']}-{self.init_vals['platform_sub']}"
               f" {self.init_vals['chdk_version']} rawopint {self.init_vals['rawopint_version']}")
         print(f"{len(self.rows)} frames, {self.init_vals['interval']/1000}s interval,"

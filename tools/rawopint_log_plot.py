@@ -12,6 +12,10 @@
 # You should have received a copy of the GNU General Public License
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+'''
+provides subclass of RawOpData with matplotlib plotting
+'''
+
 from rawopint_log_analysis import RawOpData
 import matplotlib.pyplot as plt
 
@@ -22,7 +26,6 @@ class RawOpDataPlot(RawOpData):
         add user selectable values from the run data to "label" text below the plot
         when using interactive backend. Y and shot number are included by default.
         '''
-
 
         x = int(round(x))
         s = f'y:{y:.2f}'
