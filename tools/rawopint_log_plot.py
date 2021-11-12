@@ -68,13 +68,14 @@ class RawOpDataPlot(RawOpData):
         fig, ax = plt.subplots()
         lines = []
         for name in names:
+            single_plot_options = plot_options.copy()
             # some columns have have empty values, set marker to ensure isolated points are visible
             if None in self.cols[name] and 'marker' not in plot_options:
-                plot_options['marker'] = '.'
+                single_plot_options['marker'] = '.'
                 if 'markersize' not in plot_options:
-                    plot_options['markersize'] = 2
+                    single_plot_options['markersize'] = 2
 
-            lines.append(ax.plot(self.cols[name],label=name, **plot_options)[0])
+            lines.append(ax.plot(self.cols[name],label=name, **single_plot_options)[0])
         ax.set_xlabel(xlabel)
         if ylabel:
             ax.set_ylabel(ylabel)
