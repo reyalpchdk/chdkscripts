@@ -8,9 +8,9 @@
 #ui_meter_height_pct=90 "Meter height %" [1 100]
 #ui_meter_step=15 "Meter step"
 #ui_max_ev_change_e=3 "Max Ev change" {1/16 1/8 1/4 1/3 1/2 1}
-#ui_smooth_factor=5 "Ev smooth factor/10"[0 9]
-#ui_smooth_limit_frac=7 "Ev smooth limit frac/10" [0 10]
-#ui_ev_change_rev_frac=5 "Ev change reverse frac/10" [0 10]
+#ui_smooth_factor=5 "Ev chg smooth factor/10"[0 9]
+#ui_smooth_limit_frac=7 "Ev chg smooth limit frac/10" [0 10]
+#ui_ev_chg_rev_limit_frac=5 "Ev chg reverse limit frac/10" [0 10]
 #ui_ev_use_initial=false "Use initial Ev as target"
 #ui_ev_shift_e=10 "Ev shift" {-2.1/2 -2.1/4 -2 -1.3/4  -1.1/2 -1.1/4 -1 -3/4 -1/2 -1/4 0 1/4 1/2 3/4 1 1.1/4 1.1/2 1.3/4 2 2.1/4 2.1/2}
 #ui_bv_ev_shift_pct=0 "Bv Ev shift %" [0 100]
@@ -692,7 +692,7 @@ function exp:init(opts)
 		'draw_gauge_y_pct',
 		'smooth_factor',
 		'smooth_limit_frac',
-		'ev_change_rev_frac',
+		'ev_chg_rev_limit_frac',
 	} do
 		if opts[name] == nil then
 			error('exp missing opt '..name)
@@ -1163,41 +1163,33 @@ function exp:calc_ev_change()
 	ev_change = self:clamp(ev_change,self.ev_change_max*imath.scale)
 
 	local d_ev_str = stru.imath2str(ev_change)
-	log:set{
-		d_ev_base=d_ev_str,
-		d_ev_s1=d_ev_str, -- set to base, will be overridden if smoothing active
-		d_ev_s2=d_ev_str,
-		limit_s=0,
-		limit_r=0,
-	}
+	log:set{d_ev_base=d_ev_str}
 
 	-- smooth out rapid changes with simple exponential smoothing
 	-- https://en.wikipedia.org/wiki/Exponential_smoothing
 	if self.smooth_factor > 0 then
 		local ev_change_smooth = imath.mul(ev_change, (imath.scale - self.smooth_factor)) + imath.mul(last_ev_change, self.smooth_factor)
 		log:set{d_ev_s1=stru.imath2str(ev_change_smooth)}
-		-- additional limits to reduce smoothing triggering. limit_frac = 1 means smoothed always used
+		-- additional limits to reduce smoothing triggering oscillation
+		-- limit_frac = 0 means smoothed used as is, with no limiting
 		if self.smooth_limit_frac > 0 then
 			if ev_change*ev_change_smooth < 0 -- smoothed and unsmoothed have opposite signs
 				or math.abs(ev_change) < math.abs(ev_change_smooth) then -- smoothed has larger magnitude than unsmoothed
 				local ev_change_limited = imath.mul(ev_change, self.smooth_limit_frac) + imath.mul(ev_change_smooth, imath.scale - self.smooth_limit_frac)
-				--logdesc('smooth limit:%s %s %s',stru.imath2str(ev_change_smooth),stru.imath2str(ev_change),stru.imath2str(ev_change_limited))
+				log:set{d_ev_s2=stru.imath2str(ev_change_limited)}
 				ev_change = ev_change_limited
-				log:set{limit_s=1}
 			else -- otherwise, use normal smoothing
 				ev_change = ev_change_smooth
 			end
 		else
 			ev_change = ev_change_smooth
 		end
-		log:set{d_ev_s2=stru.imath2str(ev_change)}
 	end
-	if self.ev_change_rev_frac < imath.scale then
-		-- if direction of Ev change changed, reduce by ev_change_rev_frac
+	if self.ev_chg_rev_limit_frac > 0 then
+		-- if direction of Ev change changed, reduce by ev_chg_rev_limit_frac
 		if ev_change * last_ev_change < 0 then
-			local ev_change_limited = imath.mul(ev_change,self.ev_change_rev_frac)
-			-- logdesc('sign switch: %s %s %s',stru.imath2str(last_ev_change),stru.imath2str(ev_change),stru.imath2str(ev_change_limited))
-			log:set{limit_r=1}
+			local ev_change_limited = imath.mul(ev_change,imath.scale - self.ev_chg_rev_limit_frac)
+			log:set{d_ev_r1=stru.imath2str(ev_change_limited)}
 			ev_change = ev_change_limited
 		end
 	end
@@ -1669,9 +1661,8 @@ log:init{
 		'bv_ev_shift',
 		'd_ev_base',
 		'd_ev_s1',
-		'limit_s',
 		'd_ev_s2',
-		'limit_r',
+		'd_ev_r1',
 		'd_ev_f',
 		'd_ev',
 		'desc',
@@ -1791,7 +1782,7 @@ exp:init{
 	draw_gauge_y_pct=ui_draw_gauge_y_pct,
 	smooth_factor=ui_smooth_factor*imath.scale/10, -- input is 0-9, value is imath 0-0.9
 	smooth_limit_frac=ui_smooth_limit_frac*imath.scale/10, -- imath 0-1
-	ev_change_rev_frac=ui_ev_change_rev_frac*imath.scale/10, -- imath 0-1
+	ev_chg_rev_limit_frac=ui_ev_chg_rev_limit_frac*imath.scale/10, -- imath 0-1
 }
 
 function log_preshoot_values()
