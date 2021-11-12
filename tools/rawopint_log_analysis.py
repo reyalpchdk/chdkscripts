@@ -23,7 +23,7 @@ class RawOpData:
     all_apex96_cols=['sv96','tv96','av96','bv96','meter96','meter96_tgt','bv_ev_shift']
     all_frac_cols=['over_frac','under_frac']
     all_weight_cols=['meter_weight','over_weight','under_weight']
-    all_ev_change_cols=['d_ev_base','d_ev_s1','d_ev_s2','d_ev_f','d_ev'] # apex96, but smaller values, some non-integer
+    all_ev_change_cols=['d_ev_base','d_ev_f','d_ev','d_ev_s1','d_ev_s2','d_ev_r1'] # apex96, but smaller values, some non-integer
     col_groups=['apex96','frac','weight','ev_change']
 
     @classmethod
@@ -112,18 +112,26 @@ class RawOpData:
         m = None
         m_i = None
         for i,v in enumerate(self.cols[colname]):
+            if v is None:
+                continue
             if not m or v > m:
                 m = v
                 m_i = i
+        if m is None:
+            return None
         return m, m_i, self.cols['exp'][m_i]
 
     def find_min(self,colname):
         m = None
         m_i = None
         for i,v in enumerate(self.cols[colname]):
+            if v is None:
+                continue
             if not m or v < m:
                 m = v
                 m_i = i
+        if m is None:
+            return None
         return m, m_i, self.cols['exp'][m_i]
 
     def parse_init_vals(self):
@@ -205,7 +213,7 @@ class RawOpData:
         if 'smooth_factor' in self.init_vals:
             print(f"smooth factor: {self.init_vals['smooth_factor']/1000}"
                   f" limit: {self.init_vals['smooth_limit_frac']/1000}"
-                  f" rev: {self.init_vals['ev_change_rev_frac']/1000}")
+                  f" rev: {self.init_vals['ev_chg_rev_limit_frac']/1000}")
 
         print(f"over thresh: {self.init_vals['over_thresh_frac']/10000}% margin: {self.fmt_ini_ev96('over_margin_ev')}")
         print(f"under thresh: {self.init_vals['under_thresh_frac']/10000}%  margin: {self.fmt_ini_ev96('under_margin_ev')}")
