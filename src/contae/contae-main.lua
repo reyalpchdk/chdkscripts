@@ -5,9 +5,9 @@
 #ui_meter_height_pct=60 "Meter height %" [1 100]
 #ui_meter_step=13 "Meter step"
 #ui_max_ev_change_e=5 "Max Ev change" {1/4 1/3 1/2 2/3 3/4 1 1.1/4 1.1/3 1.1/2 1.2/3 1.3/4 2}
-#ui_smooth_factor=0 "Ev smooth factor/10"[0 9]
-#ui_smooth_limit_frac=7 "Ev smooth limit frac/10" [0 10]
-#ui_ev_change_rev_frac=5 "Ev change reverse frac/10" [0 10]
+#ui_smooth_factor=0 "Ev chg smooth factor/10"[0 9]
+#ui_smooth_limit_frac=7 "Ev chg smooth limit frac/10" [0 10]
+#ui_ev_chg_rev_limit_frac=0 "Ev chg reverse limit frac/10" [0 10]
 #ui_ev_use_initial=false "Use initial Ev as target"
 #ui_ev_shift_e=10 "Ev shift" {-2.1/2 -2.1/4 -2 -1.3/4  -1.1/2 -1.1/4 -1 -3/4 -1/2 -1/4 0 1/4 1/2 3/4 1 1.1/4 1.1/2 1.3/4 2 2.1/4 2.1/2}
 #ui_tv_max_s1k=1000 "Max Tv Sec/1000"
@@ -320,9 +320,8 @@ log:init{
 		'bv_ev_shift',
 		'd_ev_base',
 		'd_ev_s1',
-		'limit_s',
 		'd_ev_s2',
-		'limit_r',
+		'd_ev_r1',
 		'd_ev_f',
 		'd_ev',
 		'desc',
@@ -418,7 +417,7 @@ exp:init{
 	draw_gauge_y_pct=ui_draw_gauge_y_pct,
 	smooth_factor=ui_smooth_factor*imath.scale/10, -- input is 0-9, value is imath 0-0.9
 	smooth_limit_frac=ui_smooth_limit_frac*imath.scale/10, -- imath 0-1
-	ev_change_rev_frac=ui_ev_change_rev_frac*imath.scale/10, -- imath 0-1
+	ev_chg_rev_limit_frac=ui_ev_chg_rev_limit_frac*imath.scale/10, -- imath 0-1
 }
 
 kb:init{

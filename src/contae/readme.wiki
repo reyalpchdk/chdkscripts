@@ -67,17 +67,20 @@ Maximum exposure change in a single step, in fractions of a stop.
 ==Ev smooth factor*10==
 Smoothing factor for exponential smoothing, multiplied by 10.  0 = no smoothing
 
-==Ev smooth limit frac*10==
+==Ev chg smooth factor*10==
+Smoothing factor for exponential smoothing, multiplied by 10.  0 = no smoothing
+
+==Ev chg smooth limit frac*10==
 Factor to reduce influence of smoothing in cases where it would move exposure away from the target exposure. 0 = smoothed value is used unmodified. 10 = smoothed value is ignored in the following cases:
 * "Overshoot" where the magnitude of the smoothed change is greater than the magnitude of the calculated change.
 * Smoothing pushing the exposure in the wrong direction. That is, if the sign of the calculated ev_change and the smoothed ev_change are opposite.
 
 Higher values reduce the tendency of smoothing to cause oscillation after large exposure changes, but can increase the influence of short term changes in a sustained trend.
 
-==Ev change reverse frac*10==
-When the direction (sign) of calculated exposure change after smoothing reverses, the magnitude of the change is reduced by frac. 0 = Change is set to 0. 10 - calculated change is used unmodified.
+==Ev chg reverse limit frac*10==
+When the direction (sign) of calculated exposure change after smoothing reverses, the magnitude of the change is reduced by frac. 0 = Calculated change is unmodified. 10 exposure is change is set to 0.
 
-Lower values damp oscillation but make the script respond more slowly to real changes.
+Higher values damp oscillation but make the script respond more slowly to real changes.
 
 ==Use initial Ev as target==
 Use the exposure of the initial shot as the target Ev instead of the pre-defined neutral value.
