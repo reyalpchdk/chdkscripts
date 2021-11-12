@@ -45,7 +45,7 @@ class RawOpDataPlot(RawOpData):
         return a function that toggles line on and off
         and toggles the alpha of legline between legline's original alpha and half
         '''
-        orig_alpha = legline.get_alpha()
+        orig_alpha = legline.get_alpha() or 1
 
         def toggle_fn():
             if line.get_visible():
