@@ -20,11 +20,35 @@ with CHDK. If not, see <http://www.gnu.org/licenses/>.
 --[!inline_start]
 -- csv log module. License: GPL
 local log={}
+
+-- 'cols' can be either a simple array of names, or include sub-arrays
+-- to allow modules to export their own list of columns
+local function unpack_cols(cols_init, cols, depth)
+	if not depth then
+		depth=0
+	elseif depth > 10 then
+		error('too many nested column specs')
+	end
+	if not cols then
+		cols = {}
+	end
+	for i,v in ipairs(cols_init) do
+		if type(v) == 'table' then
+			unpack_cols(v,cols,depth+1)
+		elseif type(v) == 'string' then
+			table.insert(cols,v)
+		else
+			error('invalid column spec '..type(v))
+		end
+	end
+	return cols
+end
+
 function log:init(opts)
 	if not opts then
 		error('missing opts')
 	end
-	self.cols={unpack(opts.cols)}
+	self.cols=unpack_cols(opts.cols)
 	self.vals={}
 	self.funcs={}
 	self.tables={}

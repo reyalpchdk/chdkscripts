@@ -119,11 +119,35 @@ package.loaded['reylib/strutil']=stru -- end inline reylib/strutil
 log=(function() -- inline reylib/csvlog
 -- csv log module. License: GPL
 local log={}
+
+-- 'cols' can be either a simple array of names, or include sub-arrays
+-- to allow modules to export their own list of columns
+local function unpack_cols(cols_init, cols, depth)
+	if not depth then
+		depth=0
+	elseif depth > 10 then
+		error('too many nested column specs')
+	end
+	if not cols then
+		cols = {}
+	end
+	for i,v in ipairs(cols_init) do
+		if type(v) == 'table' then
+			unpack_cols(v,cols,depth+1)
+		elseif type(v) == 'string' then
+			table.insert(cols,v)
+		else
+			error('invalid column spec '..type(v))
+		end
+	end
+	return cols
+end
+
 function log:init(opts)
 	if not opts then
 		error('missing opts')
 	end
-	self.cols={unpack(opts.cols)}
+	self.cols=unpack_cols(opts.cols)
 	self.vals={}
 	self.funcs={}
 	self.tables={}
@@ -653,6 +677,47 @@ exp=(function() -- inline reylib/rawexp
 local stru=require'reylib/strutil' -- previously inlined
 local exp={}
 
+--[[
+log columns used with log:set
+note logdesc function is also assumed to exist and accept printf text
+]]
+exp.log_columns={
+	'meter_time', -- milliseconds spent measuring meter area
+	'histo_time', -- milliseconds spent measuring histogram
+	'draw_time',  -- time to draw debug info on raw, if enabled
+	'sv', -- "market" ISO
+	'sv96', -- APEX*96 "real" ISO
+	'sv_l1',   -- amount calculated sv is over sv96_max
+	'sv_tv_tr', -- amount of sv over limit put back on tv
+	'tv', -- shutter speed in seconds
+	'tv96', -- APEX*96 shutter speed
+	'tv_l1', -- amount calculated tv is over tv96_short_limit or under tv96_long_limit
+	'tv_sv_tr', -- amount of calculated tv moved to ISO due to being over tv96_sv_thresh
+	'av', -- aperture as F number. Includes ND value on ND-only cameras
+	'av96', -- APEX*96 aperture
+	'nd', -- 1 ND active, 0 ND not active
+	'nd_tv_tr', -- when nd active, amount over ND trigger threshold, negative if if hysteresis active
+	'nd_hookfix', -- nd was activated in shoot hook. 1 succeeded, 0 failed. Blank if ND not active
+	'bv96', -- brightness value calculated from meter and exposure settings
+	'meter', -- average pixel value of meter area
+	'meter96', -- meter value as APEX*96 exposure, where 0 is an aribtrary chosen "correct" exposure
+	'meter96_tgt', -- target meter value for calculated for this exposure
+	'meter_weight',
+	'over_frac', -- fraction of pixels over (whitelevel - over_margin_ev)
+	'over_weight',
+	'under_frac', -- fraction of pixels under under_margin_ev
+	'under_weight',
+	'bv_ev_shift', -- bv ev shift applied to this exposure
+	'bv_ev_l1', -- original calculated bv/ev shift value if over threshold or limit
+	-- all of the following are the calculated change for the *next* exposure
+	'd_ev_base', -- calculated ev change for next exposure, with over, under and ev change limit applied
+	'd_ev_s1', -- ev change after smoothing
+	'd_ev_s2', -- ev change after smooth overshoot logic
+	'd_ev_r1', -- ev change after reverse limit logic
+	'd_ev_f', -- final ev change with whichever of the preceding applied
+	'd_ev', -- used ev change, as integer
+}
+
 function exp:init(opts)
 	local logvals={}
 	for i,name in ipairs{
@@ -986,19 +1051,23 @@ function exp:calc_bv_ev_shift()
 	if bv_ev_shift > self.meter_high_thresh then
 		local over = bv_ev_shift - self.meter_high_thresh
 		if over > 2*(self.meter_high_limit - self.meter_high_thresh) then
-			logdesc('bv ev limit:%d',bv_ev_shift)
+			--logdesc('bv ev limit:%d',bv_ev_shift)
+			self:nextlog{bv_ev_l1=bv_ev_shift}
 			bv_ev_shift = self.meter_high_limit
 		else
-			logdesc('bv ev thresh:%d',bv_ev_shift)
+			--logdesc('bv ev thresh:%d',bv_ev_shift)
+			self:nextlog{bv_ev_l1=bv_ev_shift}
 			bv_ev_shift = self.meter_high_thresh + over/2
 		end
 	elseif bv_ev_shift < self.meter_low_thresh then
 		local under = bv_ev_shift - self.meter_low_thresh
 		if under < 2*(self.meter_low_limit - self.meter_low_thresh) then
-			logdesc('bv ev -limit:%d',bv_ev_shift)
+			-- logdesc('bv ev -limit:%d',bv_ev_shift)
+			self:nextlog{bv_ev_l1=bv_ev_shift}
 			bv_ev_shift = self.meter_low_limit
 		else
-			logdesc('bv ev -thresh:%d',bv_ev_shift)
+			-- logdesc('bv ev -thresh:%d',bv_ev_shift)
+			self:nextlog{bv_ev_l1=bv_ev_shift}
 			bv_ev_shift = self.meter_low_thresh + under/2
 		end
 	end
@@ -1031,11 +1100,11 @@ function exp:calc_ev_change()
 	-- shift by % of over or under initial value
 	local bv_ev_shift = self:calc_bv_ev_shift()
 
-	log:set{bv_ev_shift=bv_ev_shift}
+	self:nextlog{bv_ev_shift=bv_ev_shift}
 
 	-- adjust target for this shot
 	self.ev_target = self.ev_target_base + bv_ev_shift
-	log:set{meter96_tgt=self.ev_target}
+	self:nextlog{meter96_tgt=self.ev_target}
 
 	-- basic change: difference of last exposure from metered exposure
 	-- plus exposure shift, clamped to per-frame limit
@@ -1157,13 +1226,13 @@ function exp:calc_ev_change()
 		over_weight=over_weight,
 		under_weight=under_weight,
 	}
+
 	ev_change = imath.scale*(ev_change*meter_weight - self.ev_change_max*over_weight + self.ev_change_max*under_weight)/(meter_weight + over_weight + under_weight)
 
 	-- everything above should already be in limits, but clamp to UI limits to be sure
 	ev_change = self:clamp(ev_change,self.ev_change_max*imath.scale)
 
-	local d_ev_str = stru.imath2str(ev_change)
-	log:set{d_ev_base=d_ev_str}
+	log:set{d_ev_base=stru.imath2str(ev_change)}
 
 	-- smooth out rapid changes with simple exponential smoothing
 	-- https://en.wikipedia.org/wiki/Exponential_smoothing
@@ -1227,9 +1296,11 @@ function exp:do_meter()
 	self.under_frac = self.histo:range(4,self.under_histo_max,self.histo_scale)
 	log:set{histo_time=get_tick_count()-t0}
 end
+
 function exp:histo_frac_to_pct(v)
 	return string.format("%d.%04d",v/(self.histo_scale/100),v%(self.histo_scale/100))
 end
+
 function exp:log_meter()
 	-- log meter values
 	log:set{
@@ -1240,6 +1311,27 @@ function exp:log_meter()
 	}
 end
 
+--[[
+some values related to calculating exposure make more sense logged with
+the exposure that used those values. Buffer for later
+]]
+function exp:nextlog(vals)
+	if not self.nextlog_vals then
+		self.nextlog_vals = {}
+	end
+	for k,v in pairs(vals) do
+		self.nextlog_vals[k] = v
+	end
+end
+
+function exp:log_nextlog_vals()
+	if self.nextlog_vals then
+		log:set(self.nextlog_vals)
+	end
+	self.nextlog_vals = nil
+end
+
+
 function exp:nd96_for_state(nd_state)
 	-- only used for cams with iris
 	if get_nd_present() == 2 and nd_state then
@@ -1247,6 +1339,7 @@ function exp:nd96_for_state(nd_state)
 	end
 	return 0
 end
+
 function exp:init_exposure_params_from_cam()
 	self.tv96 = get_prop(props.TV)
 	self.sv96 = get_prop(props.SV)
@@ -1267,9 +1360,14 @@ end
 
 -- initialization after initial halfpress ready
 function exp:init_preshoot()
+	-- prevent any stale nextlog values from carrying over into a shooting sequence
+	self.nextlog_vals = nil
 	self:init_exposure_params_from_cam()
 	self:log_exposure_params()
 	log:set{bv96=self.bv96}
+	-- shifts are currnetly not calculated or applied for the initial exposure
+	-- does not account for Canon native EV shift
+	self:nextlog{meter96_tgt=0,bv_ev_shift=0}
 	-- TODO could try to use Bv and ev comp setting
 	self.ev_change = 0
 
@@ -1340,9 +1438,11 @@ function exp:on_hook_shoot_ready()
 		self:set_nd()
 		-- TODO spammy on cams that need it
 		if self.nd_state == self:get_nd_state() then
-			logdesc('hook ndfix')
+			-- logdesc('hook ndfix')
+			log:set{nd_hookfix=1}
 		else
-			logdesc('hook ndfix fail')
+			log:set{nd_hookfix=0}
+			-- logdesc('hook ndfix fail')
 		end
 	end
 end
@@ -1414,10 +1514,12 @@ function exp:calc_exposure_params()
 			nd_state_new = false
 		end
 		if self.tv96_nd_thresh and tv96_new > self.tv96_nd_thresh then
-			logdesc('tv over nd:%d',tv96_new - self.tv96_nd_thresh)
+			-- logdesc('tv over nd:%d',tv96_new - self.tv96_nd_thresh)
+			self:nextlog{nd_tv_tr=tv96_new - self.tv96_nd_thresh}
 			nd_state_new = true
 		elseif self.tv96_nd_thresh and nd_state_old and tv96_new > self.tv96_nd_thresh - self.nd_hysteresis then
-			logdesc('tv nd hyst:%d',tv96_new - self.tv96_nd_thresh)
+			-- logdesc('tv nd hyst:%d',tv96_new - self.tv96_nd_thresh)
+			self:nextlog{nd_tv_tr=tv96_new - self.tv96_nd_thresh}
 			nd_state_new = true
 		end
 		if nd_state_new then
@@ -1437,11 +1539,13 @@ function exp:calc_exposure_params()
 			if over > (self.tv96_sv_thresh - self.tv96_long_limit)*2 then
 				tv_extra = tv96_new - self.tv96_long_limit
 				tv96_new = self.tv96_long_limit
-				logdesc('tv over long:%d',-tv_extra)
+				-- logdesc('tv over long:%d',-tv_extra)
+				self:nextlog{tv_l1=tv_extra}
 			else
 				tv_extra = -over/2
 				tv96_new = tv96_new - tv_extra
-				logdesc('tv iso adj:%d',-tv_extra)
+				-- logdesc('tv iso adj:%d',-tv_extra)
+				self:nextlog{tv_sv_tr=-tv_extra}
 			end
 		end
 
@@ -1450,12 +1554,15 @@ function exp:calc_exposure_params()
 		end
 		if sv96_new > self.sv96_max then
 			local sv_over = sv96_new - self.sv96_max
-			logdesc('iso over limit:%d',sv_over)
+			-- logdesc('iso over limit:%d',sv_over)
+			self:nextlog{sv_l1=sv_over}
 			-- if ISO range isn't past end of shutter range, put remainder back on shutter
 			if tv96_new > self.tv96_long_limit then
-				logdesc('iso over tv:%d',tv96_new - self.tv96_long_limit)
+				-- logdesc('iso over tv:%d',tv96_new - self.tv96_long_limit)
+				self:nextlog{sv_tv_tr=tv96_new - self.tv96_long_limit}
 				tv96_new = tv96_new - sv_over
 				if tv96_new < self.tv96_long_limit then
+					self:nextlog{tv_l1=tv96_new - self.tv96_long_limit}
 					tv96_new = self.tv96_long_limit
 				end
 			end
@@ -1464,13 +1571,15 @@ function exp:calc_exposure_params()
 		end
 	else
 		if tv96_new < self.tv96_long_limit then
-			logdesc('tv over long:%d',self.tv96_long_limit- tv96_new)
+			-- logdesc('tv over long:%d',self.tv96_long_limit- tv96_new)
+			self:nextlog{tv_l1=tv96_new - self.tv96_long_limit}
 			tv96_new = self.tv96_long_limit
 		end
 	end
 
 	if tv96_new > self.tv96_short_limit then
-		logdesc('tv under short:%d',tv96_new)
+		-- logdesc('tv under short:%d',tv96_new)
+		self:nextlog{tv_l1=tv96_new - self.tv96_short_limit}
 		tv96_new = self.tv96_short_limit
 	end
 
@@ -1501,6 +1610,8 @@ function exp:run()
 	self:get_cam_exposure_params()
 	-- log previous exposure
 	self:log_exposure_params()
+	-- log related items from previous exposure calc
+	self:log_nextlog_vals()
 
 	self:do_meter()
 	self:log_meter()
@@ -1631,9 +1742,6 @@ log:init{
 		'sleep',
 		'exp_start',
 		'raw_ready',
-		'meter_time',
-		'histo_time',
-		'draw_time',
 		'raw_done',
 		'vbatt',
 		'tsensor',
@@ -1642,29 +1750,7 @@ log:init{
 		'free_mem',
 		'lua_mem',
 		'sd_space',
-		'sv',
-		'sv96',
-		'tv',
-		'tv96',
-		'av',
-		'av96',
-		'nd',
-		'bv96',
-		'meter',
-		'meter96',
-		'meter96_tgt',
-		'meter_weight',
-		'over_frac',
-		'over_weight',
-		'under_frac',
-		'under_weight',
-		'bv_ev_shift',
-		'd_ev_base',
-		'd_ev_s1',
-		'd_ev_s2',
-		'd_ev_r1',
-		'd_ev_f',
-		'd_ev',
+		exp.log_columns,
 		'desc',
 	},
 	-- columns automatically set at write time from functions
