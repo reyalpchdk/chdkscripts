@@ -1,6 +1,6 @@
 --[[
 @title continuous auto exposure
-@chdk_version 1.4.1
+@chdk_version 1.5.1
 #ui_meter_width_pct=60 "Meter width %" [1 100]
 #ui_meter_height_pct=60 "Meter height %" [1 100]
 #ui_meter_step=13 "Meter step"

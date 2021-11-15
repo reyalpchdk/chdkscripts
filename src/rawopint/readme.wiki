@@ -100,7 +100,7 @@ To meter the whole scene, use large meter height and width, e.g. 90%. Using 100%
 
 With the default settings, the influence of the meter, over and under exposure balance in way that tends to keep the whole scene reasonably well exposed, at the expense of allowing some under or over exposure. For some scenes, you may want to make one dominant over the others. For example, to keep the moon from getting over-exposed at night, the under exposure limits should be turned off. On the other hand, if the sun will pass through the scene, you may want an over exposure fraction heigh enough to let it be blown out, without driving the rest of the scene completely dark.
 
-===Bv /Ev Shift===
+===Bv / Ev Shift===
 By default, the script tries to keep the meter area at a fixed exposure value. This means the subject will stay the same brightness as lighting changes, which looks unnatural in many situations. For example, if a cloud passes in front of the sun, the shadows get lighter but the overall scene brightness changes little. Similarly, a sunset will only change colors without getting any darker, until the exposure limits are hit, at which point the scene rapidly darkens. The Bv / Ev Shift setting can be used to avoid this. This setting changes the target exposure (equivalent to an Ev shift in the Canon firmware P mode etc.) in response to the absolute brightness of the scene (Bv). A value of 30% means that for every stop of actual brightness, the exposure will change by ~1/3 of a stop. This shift is limited by the over and under exposure limits and the meter limits.
 
 The Bv/Ev shift base Ev controls what absolute brightness is unshifted (in other words, what real light level will correspond to "neutral" exposure.) This can either "first" to use the initial scene, or a fixed Bv value. For fixed values, a scene in mid-day sun is around 10, while indoor artificial lighting might be around 1. For a sunset, you could use "first", causing the scene to go from normal exposure to darkness. For a sunrise, using a daylight value like 10 would give better results.
@@ -114,7 +114,7 @@ The Target ISO should normally be set to the lowest value supported by the Canon
 
 High ISOs usually trigger noise reduction (separate from dark frame) which can substantially increase processing time and affect the ability of the script to maintain the desired interval. The value where this occurs is camera dependent, but is often at 400, 800 or 1600. Set the Max ISO to a value slightly below the value that triggers the "busy" screen to maintain shorter intervals.
 
-On cameras which have an ND filter, the ND will be put in or out based on the ND TV Sec/10000 setting. This is recommended to keep shutter speeds from getting too short. It may also reduce the impact of the sun being in the field of view.
+On cameras which have an ND filter, the ND will be put in or out based on the ND TV Sec/10000 setting. This is recommended to keep shutter speeds from getting too short. It may also reduce the impact of the sun being in the field of view. Note the ND filter usually has a small but noticeable effect on the field of view, so without additional post-processing, a slight glitch may be visible when the ND state changes.
 
 ==Focus==
 The focus distance of the initial shot is used for all shots in a run. By default, the initial focus is determined by normal Canon and CHDK settings. You can use the "Focus override mode" and "Focus dist" options described below to set a specific focus distance, but CHDK focus control often has camera specific quirks so it may not work as expected.
@@ -148,7 +148,7 @@ From users
 * c_joerg https://chdk.setepontos.com/index.php?topic=12761.0
 
 =Script Options=
-Note on units: In option names, foo/N means that foo is expressed in units of 1/Nth of a foo. So "Interval sec/10" means the shooting interval value is set in tenths of a second.
+Note on units: In option names, foo/N means that foo is expressed in units of 1/Nth of a foo. So "Interval sec/10" means the shooting interval value is set in tenths of a second, while "Min Tv Sec/100K" means shortest (fastest) shutter speed, expressed in 1/100000ths of a second.
 
 ==Shots==
 Number of shots. If set to 0, script will shoot unlimited shots until the menu key pressed or low battery/low remaining space conditions are met.
@@ -208,7 +208,7 @@ Longest shutter speed to use, in 1/1000ths of a sec. If required exposure is lon
 Shortest shutter speed to use, in 1/100000ths of a sec. If required exposure is shorter, it will be limited to this value.
 
 ==Target ISO==
-ISO value to use if shutter limits (described below) not reached. Should normally be lowest ISO. In Canon UI units.
+ISO value to use if shutter limits (described below) not reached. Should normally be lowest ISO available in the Canon UI, and not lower. In Canon UI units.
 
 ==ISO adj TV Sec/1000==
 Shutter speed (in 1/1000ths of a sec) at which ISO will start to be increased. If the exposure time exceeds this value, exposure will changes are split 50/50 between shutter and ISO, subject to Max ISO and Max Tv limits.
