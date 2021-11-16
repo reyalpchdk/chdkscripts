@@ -3,6 +3,8 @@
 @chdk_version 1.5.1
 #ui_meter_width_pct=60 "Meter width %" [1 100]
 #ui_meter_height_pct=60 "Meter height %" [1 100]
+#ui_meter_left_pct=-1 "Meter left % (-1 center)" [-1 99]
+#ui_meter_top_pct=-1 "Meter top % (-1 center)" [-1 99]
 #ui_meter_step=13 "Meter step"
 #ui_max_ev_change_e=5 "Max Ev change" {1/4 1/3 1/2 2/3 3/4 1 1.1/4 1.1/3 1.1/2 1.2/3 1.3/4 2}
 #ui_smooth_factor=0 "Ev chg smooth factor/10"[0 9]
@@ -397,6 +399,8 @@ function exp:init(opts)
 		'sv96_target',
 		'meter_width_pct',
 		'meter_height_pct',
+		'meter_left_pct',
+		'meter_top_pct',
 		'meter_step',
 		'meter_high_thresh',
 		'meter_high_limit',
@@ -439,10 +443,40 @@ function exp:init(opts)
 	self.meter_width = bitand(0xFFFFFFFC,self.meter_width)
 	self.meter_height = bitand(0xFFFFFFFC,self.meter_height)
 
-	-- meter rectangle, centered in active area
-	self.meter_left = rawop.get_active_left() + rawop.get_active_width()/2 - self.meter_width/2
+	-- -1 = centered in active area
+	if self.meter_left_pct == -1 then
+		self.meter_left = rawop.get_active_left() + rawop.get_active_width()/2 - self.meter_width/2
+	else
+		self.meter_left = rawop.get_active_left() + (self.meter_left_pct * rawop.get_active_width()) / 100
+		self.meter_left = bitand(0xFFFFFFFC,self.meter_left)
+		if self.meter_left + self.meter_width >= rawop.get_active_width() then
+			local meter_width_trunc = rawop.get_active_width() - self.meter_left
+			meter_width_trunc = bitand(0xFFFFFFFC,meter_width_trunc)
+			if meter_width_trunc < 4 then
+				error('meter width too small')
+			end
+			logdesc('WARN:meter_width truncated:%d->%d',self.meter_width,meter_width_trunc)
+			self.meter_width = meter_width_trunc
+		end
+	end
 	self.meter_x_count = self.meter_width/self.meter_step
-	self.meter_top = rawop.get_active_top() + rawop.get_active_height()/2 - self.meter_height/2
+
+	-- -1 = centered in active area
+	if self.meter_top_pct == -1 then
+		self.meter_top = rawop.get_active_top() + rawop.get_active_height()/2 - self.meter_height/2
+	else
+		self.meter_top = rawop.get_active_top() + (self.meter_top_pct * rawop.get_active_height()) / 100
+		self.meter_top = bitand(0xFFFFFFFC,self.meter_top)
+		if self.meter_top + self.meter_height >= rawop.get_active_height() then
+			local meter_height_trunc = rawop.get_active_height() - self.meter_top
+			meter_heightl_trunc = bitand(0xFFFFFFFC,meter_height_trunc)
+			if meter_height_trunc < 4 then
+				error('meter height too small')
+			end
+			logdesc('WARN:meter_height truncated:%d->%d',self.meter_height,meter_height_trunc)
+			self.meter_height = meter_height_trunc
+		end
+	end
 	self.meter_y_count = self.meter_height/self.meter_step
 
 	-- weight of meter in "normal range" hard coded for now
@@ -1566,6 +1600,8 @@ logdesc=log:text_logger('desc')
 exp:init{
 	meter_width_pct=ui_meter_width_pct,
 	meter_height_pct=ui_meter_height_pct,
+	meter_left_pct=ui_meter_left_pct,
+	meter_top_pct=ui_meter_top_pct,
 	meter_step=ui_meter_step,
 
 	ev_change_max=ui_max_ev_change,

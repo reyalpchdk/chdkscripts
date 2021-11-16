@@ -3,6 +3,8 @@
 @chdk_version 1.5.1
 #ui_meter_width_pct=60 "Meter width %" [1 100]
 #ui_meter_height_pct=60 "Meter height %" [1 100]
+#ui_meter_left_pct=-1 "Meter left % (-1 center)" [-1 99]
+#ui_meter_top_pct=-1 "Meter top % (-1 center)" [-1 99]
 #ui_meter_step=13 "Meter step"
 #ui_max_ev_change_e=5 "Max Ev change" {1/4 1/3 1/2 2/3 3/4 1 1.1/4 1.1/3 1.1/2 1.2/3 1.3/4 2}
 #ui_smooth_factor=0 "Ev chg smooth factor/10"[0 9]
@@ -327,6 +329,8 @@ logdesc=log:text_logger('desc')
 exp:init{
 	meter_width_pct=ui_meter_width_pct,
 	meter_height_pct=ui_meter_height_pct,
+	meter_left_pct=ui_meter_left_pct,
+	meter_top_pct=ui_meter_top_pct,
 	meter_step=ui_meter_step,
 
 	ev_change_max=ui_max_ev_change,

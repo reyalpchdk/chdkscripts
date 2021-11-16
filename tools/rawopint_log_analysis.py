@@ -150,6 +150,7 @@ class RawOpData:
 
     def parse_init_vals(self):
         self.init_vals = {}
+        self.init_warnings = []
         for chunk in [x.strip() for x in self.preshoot_row['desc'].split('/')]:
             chunk_parts = chunk.split(':',1)
             nm = chunk_parts[0]
@@ -166,6 +167,8 @@ class RawOpData:
                 plat,build = rest.split(' ',1)
                 self.init_vals['platform'],self.init_vals['platform_sub'],self.init_vals['chdk_version'] = plat.split('-',2)
                 self.init_vals['build_date'] = build
+            elif nm == 'WARN':
+                self.init_warnings.append(rest)
             else:
                 # hacky for inconsistent formatting
                 c = chunk.count(':')
@@ -240,5 +243,24 @@ class RawOpData:
         print(f"meter low thresh: {self.fmt_ini_ev96('meter_low_thresh')}"
               f" limit: {self.fmt_ini_ev96('meter_low_limit')}"
               f" weight: {self.init_vals['meter_low_limit_weight']}")
+
+        # older versions were hard coded to center
+        if 'meter_left_pct' not in self.init_vals or self.init_vals['meter_left_pct'] == -1:
+            mleft = 'center'
+        else:
+            mleft = f"{self.init_vals['meter_left_pct']}%"
+        if 'meter_top_pct' not in self.init_vals or self.init_vals['meter_top_pct'] == -1:
+            mtop = 'center'
+        else:
+            mtop = f"{self.init_vals['meter_top_pct']}%"
+
+        print(f"meter area: ({mleft}, {mtop}) {self.init_vals['meter_width_pct']}% x"
+              f" {self.init_vals['meter_height_pct']}%"
+              f" ({self.init_vals['meter_top']}, {self.init_vals['meter_left']})"
+              f" {self.init_vals['meter_width']} x {self.init_vals['meter_height']}")
+        if len(self.init_warnings):
+            print('init warnings:')
+            for w in self.init_warnings:
+                print(w)
 
 

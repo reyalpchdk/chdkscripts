@@ -35,11 +35,10 @@ When full shoot is pressed, a shooting burst starts. The first shot in the burst
 
 If you hold the shutter down while starting the script, it will half shoot and start a burst as soon as it is ready.
 
-The metering is done using an adjustable sized rectangle in the middle of the sensor, and the script normally tries to keep this at the "neutral" value. Additionally, a histogram of the entire sensor is used to limit amount of over and under exposed pixels in the entire scene to user specified ranges.
+The metering is done using an adjustable sized rectangle on the sensor, and the script normally tries to keep this at the "neutral" value. Additionally, a histogram of the entire sensor is used to limit amount of over and under exposed pixels in the entire scene to user specified ranges.
 
 This is under development and not completed. In particular:
 * Doesn't handle aperture adjustments yet. This means the initial aperture value set by the Canon firmware or CHDK overrides will be used for every shot.
-* ND filter control is only available on cameras without an adjustable aperture, and the ND value may be inaccurate if the canon firmware did not set the ND filter in for the first exposure.
 * There are too many options, and their meanings are not clear.
 * Not all Canon controls are passed though.
 
@@ -57,6 +56,12 @@ Width of meter area, in percent of active area.
 
 ==Meter height %==
 Height of meter area, in percent of active area.
+
+==Meter left %==
+Left edge of the meter area, expressed as percent of sensor width. Use -1 to center.
+
+==Meter top %==
+Top edge of the meter area, expressed as percent of sensor height. Use -1 to center.
 
 ==Meter step==
 Ever step-th pixel is measured. To sample all colors, it should be odd.

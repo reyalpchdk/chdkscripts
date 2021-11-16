@@ -49,6 +49,7 @@ http://chdk.setepontos.com/index.php?topic=8997.0
 ** sv_l1 = Amount calculated sv is over sv96_max, formerly "iso over limit"
 ** sv_tv_tr = Amount of sv over limit put back on tv, formerly "iso over tv"
 ** bv_ev_l1 - Original calculated bv/ev shift value if over threshold or limit, formerly "bv ev limit", "bv ev thesh"
+* Meter position is now adjustable
 
 ===Version 0.25 - May 6, 2018===
 * Add workaround to prevent aperture changes on cameras incorrectly defined to have ND even when ND threshold is disabled. Thanks c_joerg for reporting
@@ -94,7 +95,7 @@ Interval should be long enough that the camera can keep up, including time for m
 SD card firmware garbage collection, wear leveling etc. may cause shots to occasionally take much longer than normal. Unfortunately, this behavior is not well specified, and does not necessarily correspond to card cost or speed rating.
 
 ==Metering and exposure control==
-Metering is done using an adjustable sized rectangle in the middle of the sensor, referred to below as the "meter". Additionally, a histogram of the entire sensor area is analyzed to limit the fraction of over and under exposed pixels to user specified ranges. The relative influence of these limits may be adjusted, and exposure changes are smoothed with simple exponential smoothing (https://en.wikipedia.org/wiki/Exponential_smoothing) by default to avoid flickering. The target exposure defaults to a "neutral" value, roughly equivalent to what the Canon firmware auto-exposure would use for an evenly lit subject.
+Metering is done using a rectangular area referred to as the "meter". The position and size of the meter can be adjusted in using script menu options. Additionally, a histogram of the entire sensor area is analyzed to limit the fraction of over and under exposed pixels to user specified ranges. The relative influence of these limits may be adjusted, and exposure changes are smoothed with simple exponential smoothing (https://en.wikipedia.org/wiki/Exponential_smoothing) by default to avoid flickering. The target exposure defaults to a "neutral" value, roughly equivalent to what the Canon firmware auto-exposure would use for an evenly lit subject.
 
 To meter the whole scene, use large meter height and width, e.g. 90%. Using 100% is not recommended, since masked areas, vignetting and other artifacts are often present at the extreme edges. Use smaller sizes for a "spot" meter. Note that the meter value is the average value of the metered area, so a scene that is half light and half shadow will be treated the same as a even value half way between the two.
 
@@ -164,6 +165,12 @@ Width of meter area, in percent of active area.
 
 ==Meter height %==
 Height of meter area, in percent of active area.
+
+==Meter left %==
+Left edge of the meter area, expressed as percent of sensor width. Use -1 to center.
+
+==Meter top %==
+Top edge of the meter area, expressed as percent of sensor height. Use -1 to center.
 
 ==Meter step==
 Every step-th pixel is measured. To sample all colors, it should be odd.
