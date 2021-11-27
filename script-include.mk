@@ -47,11 +47,14 @@ GLUEFILE=$(OUTDIR)/chdkptp/$(SCRIPTNAME)_chdkptp.lua
 endif
 endif
 
-.PHONY: clean clean-built clean-dist clean-glue script dist glue
+.PHONY: clean clean-built clean-dist clean-glue script dist glue upload
 
 script: $(OUTFILE)
 dist: $(DISTZIP)
 glue: $(GLUEFILE)
+
+upload: $(OUTFILE)
+	$(CHDKPTP) -c -e'u $(OUTFILE) CHDK/SCRIPTS'
 
 $(OUTFILE): $(SCRIPTNAME)-main.lua $(LIBFILES)
 	$(INLINE_CMD)
