@@ -362,6 +362,10 @@ function run()
 		set_tv96_direct(tv)
 		hook_raw.continue()
 		log:write()
+		-- if run through remoteshoot, honor the filedummy option to create dummy jpeg/cr2 files
+		if rs_opts and rs_opts.filedummy then
+			rlib_shoot_filedummy()
+		end
 		-- encourage garbage collection at a predictable point
 		collectgarbage('step')
 	end

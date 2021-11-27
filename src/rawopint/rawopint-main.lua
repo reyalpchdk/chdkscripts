@@ -406,6 +406,10 @@ function run()
 		logdesc('cont_mode')
 	end
 
+	if rs_opts then
+		logdesc('remoteshoot')
+	end
+
 	if ui_zoom_mode_t.value ~= 'Off' then
 		local zoom_step
 		if ui_zoom_mode_t.value == 'Pct' then
@@ -582,6 +586,10 @@ function run()
 		hook_raw.continue()
 		logtime('raw_done')
 		log:write()
+		-- if run through remoteshoot, honor the filedummy option to create dummy jpeg/cr2 files
+		if rs_opts and rs_opts.filedummy then
+			rlib_shoot_filedummy()
+		end
 		-- encourage garbage collection at a predictable point
 		-- TODO should do full collect in sleep time if avail, otherwise step
 		collectgarbage('step')
