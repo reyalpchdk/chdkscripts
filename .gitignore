@@ -1,5 +1,6 @@
 # directory for staging and zips
 /dist
+config.mk
 
 # python stuff
 # Byte-compiled / optimized / DLL files

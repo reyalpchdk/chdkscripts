@@ -68,6 +68,10 @@ For optimal results, the dark frames should be taken at a similar temperature to
 ==Amp glow==
 Some cameras (especially those from before about 2012) show very significant "amp glow" for exposures of a few tens of seconds or more. This shows up as a purplish glow in one or more corners of the image. Amp glow can be mitigated to some extent using dark frames. More recent cameras tend to perform better, with exposures of several minutes not showing significant amp glow.
 
+==Tethered shooting==
+This script can be used with [https://app.assembla.com/spaces/chdkptp/wiki chdkptp] remoteshoot for "tethered" shooting, where images are saved directly to a connected PC. Use the chdkptp remoteshoot -script option with the included fixedint_chdkptp.lua "glue" script. The remoteshoot -shots and -int options set the number of shots and interval respectively. To modify other settings, edit the glue script.
+
+
 
 =Examples=
 
