@@ -33,7 +33,7 @@ http://chdk.setepontos.com/index.php?topic=8997.0
 * ND value and initial ND state now automatically detected for most ports
 * ND should work on most cameras in "quick" mode
 * Canon RAW/JPEG setting can be set on cameras with native raw support
-* JPEG size setting will avoid unsupported values on propset > 6 cams
+* JPEG size setting will avoid unsupported values on some propset > 6 cams
 * Fixed some cases where some cameras would take an extra shot at script exit
 * Removed non-working simulation option
 * Fixed bug which caused Ev shift to result in incorrect Bv / Ev shift values, even when Bv / Ev shift was not enabled
@@ -50,6 +50,7 @@ http://chdk.setepontos.com/index.php?topic=8997.0
 ** sv_tv_tr = Amount of sv over limit put back on tv, formerly "iso over tv"
 ** bv_ev_l1 - Original calculated bv/ev shift value if over threshold or limit, formerly "bv ev limit", "bv ev thesh"
 * Meter position is now adjustable
+* Improved support for chdkptp tethered shooting
 
 ===Version 0.25 - May 6, 2018===
 * Add workaround to prevent aperture changes on cameras incorrectly defined to have ND even when ND threshold is disabled. Thanks c_joerg for reporting
@@ -126,7 +127,9 @@ If available, setting focus through the Canon UI using Canon firmware MF or AF L
 The "Start hour", "Start min" and "Start sec" options allow you to set the script to start shooting at a particular camera clock time. When using this feature, starting the script with the camera in playback will preserve battery life, and on most P&S cameras should keep the shutter closed until shooting begins. When starting the script in playback mode, the focus option should be used to set focus distance, unless you have high confidence the scene will autofocus well. The CHDK OSD subject distance display may help you determine the correct focus distance.
 
 ==Tethered shooting==
-This script can be used with [https://app.assembla.com/spaces/chdkptp/wiki chdkptp] remoteshoot for "tethered" shooting, where images are saved directly to a connected PC. Use the chdkptp remoteshoot -script option with the included rawopint_chdkptp.lua "glue" script. The remoteshoot -shots and -int options set the number of shots and interval respectively. To modify other settings, edit the glue script.
+This script can be used with [https://app.assembla.com/spaces/chdkptp/wiki chdkptp] remoteshoot for "tethered" shooting, where images are saved directly to a connected PC. Use the chdkptp remoteshoot -script option with the included rawopint_chdkptp.lua "glue" script.
+
+remoteshoot options controlling interval (-int), number of shots (-cont, -quick, -shots) image format (-jpg, -craw, -raw, -dng) and focus distance (-sd, -sdmode) set the corresponding options in the script. To modify other settings, edit the glue script.
 
 ==Camera specific issues==
 * D10 has been observed shoot with the shutter closed with some combinations of settings, particularly if the debug OSD is off, and either raw hook sleep is zero, or disable script yield is not set. It's unclear whether this represents a hardware failure, or is a side effect of how the script interacts with the canon firmware. This has only been observed on one camera, and has not been seen other models. See http://chdk.setepontos.com/index.php?topic=12258.0
@@ -311,7 +314,7 @@ Override Canon jpeg resolution. "Default" uses current Canon UI setting, remaini
 Override current CHDK raw setting. "Default" uses current CHDK UI setting, otherwise, force on or off.
 
 ==Canon image format==
-For cameras that support raw in the Canon firmware, set Canon raw/jpeg setting. "Default" uses the current setting.
+For cameras that support raw in the Canon firmware, set Canon raw/jpeg setting. "Default" uses the current Canon UI setting.
 
 Note: On some cameras, Canon raw is an image resolution setting, so the script "Image size" setting will be ignored if Canon raw is enabled, and "Large" will be used if raw+jpeg is selected.
 

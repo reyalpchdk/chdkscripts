@@ -12,7 +12,7 @@ script options and override any settings in the glue section if used
 -int: ui_interval_s10
 -cont: ui_use_cont
 -sd, -sdmode: ui_sd, ui_sd_mode_t
--jpg, craw, raw, -dng: ui_use_raw_e, ui_canon_img_fmt
+-jpg, -craw, -raw, -dng: ui_use_raw_e, ui_canon_img_fmt
 
 Other remoteshoot options for camera side values (exposure etc) are ignored
 

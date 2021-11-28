@@ -13,8 +13,11 @@ https://github.com/reyalpchdk/chdkscripts
 
 ==Change History==
 ===Version 1.4 - in development===
+* CHDK 1.5.1 or later required
 * Fixed some cases where some cameras would take an extra shot at script exit
 * Fixed display off not working if cam was in canon power saving before initial half press
+* Canon RAW/JPEG setting can be set on cameras with native raw support
+* Added support for chdkptp tethered shooting
 
 ===Version 1.3 - May 6, 2018===
 * Added options to start at a particular clock time
@@ -29,9 +32,9 @@ https://github.com/reyalpchdk/chdkscripts
 
 =General usage notes=
 
-This script is requires CHDK 1.4.1 or later. Options are described in detail in the options section below.
+This script is requires CHDK 1.5.1 or later. Options are described in detail in the options section below.
 
-Set focus to infinity in the Canon firmware or SD overrides before shooting.
+Set focus to infinity or on your subject in the Canon firmware, SD overrides or script options before shooting.
 
 Picture review and flash should be turned off in Canon settings.
 
@@ -69,9 +72,11 @@ For optimal results, the dark frames should be taken at a similar temperature to
 Some cameras (especially those from before about 2012) show very significant "amp glow" for exposures of a few tens of seconds or more. This shows up as a purplish glow in one or more corners of the image. Amp glow can be mitigated to some extent using dark frames. More recent cameras tend to perform better, with exposures of several minutes not showing significant amp glow.
 
 ==Tethered shooting==
-This script can be used with [https://app.assembla.com/spaces/chdkptp/wiki chdkptp] remoteshoot for "tethered" shooting, where images are saved directly to a connected PC. Use the chdkptp remoteshoot -script option with the included fixedint_chdkptp.lua "glue" script. The remoteshoot -shots and -int options set the number of shots and interval respectively. To modify other settings, edit the glue script.
+This script can be used with [https://app.assembla.com/spaces/chdkptp/wiki chdkptp] remoteshoot for "tethered" shooting, where images are saved directly to a connected PC. Use the chdkptp remoteshoot -script option with the included fixedint_chdkptp.lua "glue" script.
 
+remoteshoot options controlling interval (-int), number of shots (-cont, -quick, -shots) image format (-jpg, -craw, -raw, -dng) and focus distance (-sd, -sdmode) set the corresponding options in the script. To modify other settings, edit the glue script.
 
+Note that since the default remoteshoot quick and cont modes shoot at a fixed interval with fixed settings, running fixedint in tethered mode has little advantage outside of the logfile and dark frame options.
 
 =Examples=
 
@@ -110,11 +115,14 @@ Number of shots to shoot. Set to zero to shoot until one of the shutdown conditi
 ==Interval Sec/10==
 Minimum shooting interval, in 1/10ths of a second. Set to 0 to shoot as fast as possible.
 
-==Use raw==
+==Use CHDK raw==
 Control CHDK raw saving.
 * Default = Use current CHDK UI setting.
 * Yes = Save raw
 * No = Do not save raw
+
+==Canon image format==
+For cameras that support raw in the Canon firmware, set Canon raw/jpeg setting. "Default" uses the current Canon UI setting.
 
 ==Disable Canon Dark Frame==
 Force canon dark frame subtraction off. This is useful to increase the shooting rate of long exposures. Standalone dark frames can be created and subtracted later.

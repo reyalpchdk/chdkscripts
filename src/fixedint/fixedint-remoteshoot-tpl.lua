@@ -12,6 +12,7 @@ script options and override any settings in the glue section if used
 -int: ui_interval_s10
 -cont: ui_use_cont
 -sd, -sdmode: ui_sd, ui_sd_mode_t
+-jpg, -craw, -raw, -dng: ui_use_raw_e, ui_canon_img_fmt
 
 Other remoteshoot options for camera side values (exposure etc) are ignored
 
@@ -34,6 +35,10 @@ if rs_opts then
 	end
 	-- for convenience, respect -cont
 	ui_use_cont=rs_opts.cont
+	-- image format must match what remoteshoot expects, override to "Default"
+	-- required for canon formats, not strictly required for CHDK raw
+	ui_use_raw_e=0
+	ui_canon_img_fmt=0
 	-- pass through SD and sd mode
 	if rs_opts.sd then
 		ui_sd=rs_opts.sd
