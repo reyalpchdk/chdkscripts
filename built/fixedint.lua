@@ -1,9 +1,10 @@
 --[[
 @title fixed exposure intervalometer
-@chdk_version 1.4.1
+@chdk_version 1.5.1
 #ui_shots=1 "Shots (0=unlimited)"
 #ui_interval_s10=0 "Interval Sec/10 (0=max)"
-#ui_use_raw_e=1 "Use raw" {Default Yes No}
+#ui_use_raw_e=1 "Use CHDK raw" {Default Yes No}
+#ui_canon_img_fmt=0 "Canon image format" {Default JPG RAW RAW+JPG}
 #ui_disable_dfs=true "Disable Canon Dark Frame"
 #ui_tv_e=3 "Tv" {0 256 128 64 32 16 8 4 2 1 1/2 1/4 1/8 1/16 1/32 1/64}
 #ui_tv_s=0 "Tv + sec" [0 2000]
@@ -59,6 +60,7 @@ if ui_iso ~= 0 then
 end
 
 use_raw=({false,1,0})[ui_use_raw_e + 1]
+canon_img_fmt=({false,1,2,3})[ui_canon_img_fmt + 1]
 
 ;(function()
 	local tv_us=ui_tv_s*1000000 + ui_tv_s10000*100
@@ -687,6 +689,15 @@ function init_shutter_procs()
 end
 
 function restore()
+	-- note for some cameras, canon raw is in RESOLUTION prop
+	-- restore raw and size settings in reverse order of set to restore initial value
+	if canon_img_fmt_save then
+		set_canon_image_format(canon_img_fmt_save)
+	end
+	if image_size_save then
+		set_prop(props.RESOLUTION,image_size_save)
+	end
+
 	set_raw_nr(save_nr)
 	set_raw(save_raw)
 	disp:enable(true)
@@ -830,6 +841,21 @@ function run()
 	if use_raw then
 		set_raw(use_raw)
 	end
+	if canon_img_fmt then
+		if get_canon_raw_support() then
+			-- note for some cameras, canon raw is in RESOLUTION prop
+			-- save resolution value to restore later
+			image_size_save = get_prop(props.RESOLUTION)
+			canon_img_fmt_save = get_canon_image_format()
+			set_canon_image_format(canon_img_fmt)
+			logdesc('set canon_img_fmt:%d',canon_img_fmt)
+		elseif canon_img_fmt > 1 then
+			error('Firmware does not support Canon RAW')
+		end
+	else
+		logdesc('canon_img_fmt:%d',get_canon_image_format())
+	end
+
 	if ui_disable_dfs then
 		set_raw_nr(1)
 	end

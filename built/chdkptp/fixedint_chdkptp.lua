@@ -12,6 +12,7 @@ script options and override any settings in the glue section if used
 -int: ui_interval_s10
 -cont: ui_use_cont
 -sd, -sdmode: ui_sd, ui_sd_mode_t
+-jpg, -craw, -raw, -dng: ui_use_raw_e, ui_canon_img_fmt
 
 Other remoteshoot options for camera side values (exposure etc) are ignored
 
@@ -24,13 +25,15 @@ like
 ]]
 
 -- @title fixed exposure intervalometer
--- @chdk_version 1.4.1
+-- @chdk_version 1.5.1
 -- #ui_shots=1 "Shots (0=unlimited)"
 ui_shots=1
 -- #ui_interval_s10=0 "Interval Sec/10 (0=max)"
 ui_interval_s10=0
--- #ui_use_raw_e=1 "Use raw" {Default Yes No}
+-- #ui_use_raw_e=1 "Use CHDK raw" {Default Yes No}
 ui_use_raw_e=1
+-- #ui_canon_img_fmt=0 "Canon image format" {Default JPG RAW RAW+JPG}
+ui_canon_img_fmt=0
 -- #ui_disable_dfs=true "Disable Canon Dark Frame"
 ui_disable_dfs=true
 -- #ui_tv_e=3 "Tv" {0 256 128 64 32 16 8 4 2 1 1/2 1/4 1/8 1/16 1/32 1/64}
@@ -96,6 +99,10 @@ if rs_opts then
 	end
 	-- for convenience, respect -cont
 	ui_use_cont=rs_opts.cont
+	-- image format must match what remoteshoot expects, override to "Default"
+	-- required for canon formats, not strictly required for CHDK raw
+	ui_use_raw_e=0
+	ui_canon_img_fmt=0
 	-- pass through SD and sd mode
 	if rs_opts.sd then
 		ui_sd=rs_opts.sd
