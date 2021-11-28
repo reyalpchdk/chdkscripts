@@ -30,28 +30,46 @@ Uses raw image data to proved auto-exposure while shooting in continuous mode.
 * [Source + documentation](src/contae)
 * [Forum Thread](https://chdk.setepontos.com/index.php?topic=12696.0)
 
+# chdkptp tethered shooting support
+The directory [built/chdkptp](built/chdkptp/) contains "glue" scripts which can
+allow the use of some of the scripts with chdkptp remoteshoot.
+
 # Inline module build system
 For modularity and ease of code re-use, these scripts are composed of Lua modules,
 which are then "inlined" into a single file for ease of distribution and installation.
 
 The main scripts are found in `src/<scriptname>`, and the modules are in `src/reylib`
 
-Builds of the current development source can be found in the [built](built/) directory. While
-the development builds in the master branch should generally run, they may be broken,
-have features in flux, or be out of sync with the documentation.
+Builds of the current development source are checked in for the convenience of users
+who do not have the build environment configured. They can be found in the [built](built/)
+directory. While the development builds in the master branch should generally run,
+they may be broken, have features in flux, or be out of sync with the documentation.
+For released builds, see the release links above.
 
 If you want to make modifications to any of the scripts for your own use, you can
 edit the built script directly rather than using the build system.
 
-If you do want to use the build system, you need GNU make and python 3 or
-[chdkptp](https://app.assembla.com/spaces/chdkptp/wiki). To build a script, use
-`make <scriptname>` (without .lua) in the top level directory. See the makefiles
-for additional targets.
+If you do want to use the build system, you need GNU compatible make and python 3
+or [chdkptp](https://app.assembla.com/spaces/chdkptp/wiki). Use `make allscript` to
+build all the scripts. Other global targets include `allzip` to build distributable
+zips, `clean` to remove all built files, and `allup` to upload all to the camera.
+
+To build a single script, use `make <scriptname>` (without .lua) in the top level
+directory. To make other script-specific targets, use `make <scriptname> TARGET="targets"`, like
+```
+make rawopint TARGET="clean dist upload"
+```
+
+You can create a file called `config.mk` to set build settings. See `include.mk` for descriptions.
+
+The build system can also produce "glue" files which allow some scripts to be used
+with chdkptp remoteshoot. chdkptp must be installed to generate these files, and you must
+set MAKE\_GLUE
 
 # Lua Modules
 There may be documentation for these someday, but for now, [use the source](src/reylib)
 
-* `clkstart.lua` - Start a script at a particular time
+* `clkstart.lua` - Wait for a particular time to start shooting
 * `csvlog.lua` - Log values to csv file
 * `disp.lua` - Control display / backlight
 * `focus.lua` - Control focus overrides, selecting supported focus override mode
@@ -64,15 +82,16 @@ some modules assume that other modules are present, for example, the exposure mo
 that the log module be included and configured with the appropriate fields.
 
 To use the modules in your own scripts, you can use `buildscript.py` to inline them
-like the scripts here, copy the relevant inline blocks manually. The modules should also
-work with regular Lua `require` if installed in CHDK/LUALIB on your SD card, but this
+like the scripts here, or copy the relevant inline blocks manually. The modules should
+also work with regular Lua `require` if installed in CHDK/LUALIB on your SD card, but this
 is not generally tested. If you distribute a script using these modules, it's strongly
 recommended that you inline them.
 
 # Tools
 * `buildscript.py` - Used to build scripts
-* `rawopint_log_analysis.py` - Library for loading and analyzing rawopint logs
-* `rawopint-analysis.ipynb` - Sample jupyter notebook
+* `rawopint_log_analysis.py` - Python class for loading and analyzing rawopint logs
+* `rawopint_log_plot.py` - Subclass of analysis class matplotlib plotting methods
+* `rawopint-analysis.ipynb` - Sample [jupyter notebook](https://jupyter.org/)
 
 # Contact
 The [CHDK forum](https://chdk.setepontos.com/index.php) is preferred for general

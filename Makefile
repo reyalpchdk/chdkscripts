@@ -1,15 +1,30 @@
+# see include.mk for configurable settings
+# to build a single script, specify the bare script name without .lua, like
+#  make rawopint
+# to build other targets for a single script, use the TARGET variable, like
+#  make rawopint TARGET="clean dist upload"
+# to build everything to distributable zip files, use
+#  make allzip
+TOPDIR=.
+include $(TOPDIR)/include.mk
 SCRIPTS=rawopint fixedint contae
 DISTZIPS=$(foreach script,$(SCRIPTS),$(script).zip)
 
-.PHONY: clean allscript allzip $(SCRIPTS) $(DISTZIPS)
+# target for make scriptname
+TARGET ?= script
+
+.PHONY: clean allscript allzip allup $(SCRIPTS) $(DISTZIPS)
 
 
 allscript: $(SCRIPTS)
 
 allzip: $(DISTZIPS)
 
+allup: allscript
+	cd $(BUILTDIR) && $(CHDKPTP) $(CHDKPTP_CONNECT) -e'mup $(patsubst %,%.lua,$(SCRIPTS)) CHDK/SCRIPTS'
+
 $(SCRIPTS):
-	$(MAKE) -C ./src/$@ script
+	$(MAKE) -C ./src/$@ $(TARGET)
 
 $(DISTZIPS):
 	$(MAKE) -C ./src/$(patsubst %.zip,%,$@) dist

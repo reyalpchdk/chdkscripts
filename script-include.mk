@@ -1,24 +1,7 @@
-# config.mk may optionally define
-# CHDKPTP=<path to chdkptp exe or shell script>
-# use chdkptp for inline instead of python
-# CHDKPTP_INLINE=1
-# more verbose output#
-# VERBOSE=1
-# make remoteshoot glue files (requires chdkptp)
-# MAKE_GLUE=1
--include $(TOPDIR)/config.mk
+# variables and generic rules for script makefiles
+include $(TOPDIR)/include.mk
 
-OUTDIR=$(TOPDIR)/built
-SRCDIR=$(TOPDIR)/src
-LIBDIR=$(SRCDIR)/reylib
-DISTDIR=$(TOPDIR)/dist
 DISTSTAGEDIR=$(TOPDIR)/dist/$(SCRIPTNAME)
-
-ifeq ($(OS),Windows_NT)
-CHDKPTP ?= chdkptp.exe
-else
-CHDKPTP ?= chdkptp.sh
-endif
 
 ifdef CHDKPTP_INLINE
 ifdef VERBOSE
@@ -34,7 +17,7 @@ endif
 
 GLUE_CMD=$(CHDKPTP) -e'exec require"chdkscripthdr".new_header{file="$<"}:make_glue_file("$(GLUETPLFILE)","$@")'
 
-OUTFILE=$(OUTDIR)/$(SCRIPTNAME).lua
+OUTFILE=$(BUILTDIR)/$(SCRIPTNAME).lua
 LIBFILES=$(foreach lib,$(LIBS),$(LIBDIR)/$(lib).lua)
 DISTZIP=$(DISTDIR)/$(SCRIPTNAME).zip
 READMESRC=readme.wiki
@@ -43,7 +26,7 @@ READMEDIST=$(DISTSTAGEDIR)/readme-$(SCRIPTNAME).txt
 ifdef MAKE_GLUE
 ifdef GLUETPLNAME
 GLUETPLFILE=$(SRCDIR)/$(SCRIPTNAME)/$(GLUETPLNAME)
-GLUEFILE=$(OUTDIR)/chdkptp/$(SCRIPTNAME)_chdkptp.lua
+GLUEFILE=$(BUILTDIR)/chdkptp/$(SCRIPTNAME)_chdkptp.lua
 endif
 endif
 
@@ -54,7 +37,7 @@ dist: $(DISTZIP)
 glue: $(GLUEFILE)
 
 upload: $(OUTFILE)
-	$(CHDKPTP) -c -e'u $(OUTFILE) CHDK/SCRIPTS'
+	$(CHDKPTP) $(CHDKPTP_CONNECT) -e'u $(OUTFILE) CHDK/SCRIPTS'
 
 $(OUTFILE): $(SCRIPTNAME)-main.lua $(LIBFILES)
 	$(INLINE_CMD)
