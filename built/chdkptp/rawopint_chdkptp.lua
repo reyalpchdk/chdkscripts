@@ -8,7 +8,7 @@ from chdkptp, use like
 
 The following remoteshoot options are mapped to corresponding
 script options and override any settings in the glue section if used
--shots: ui_shots
+-shots (or number specified with -cont or -quick): ui_shots
 -int: ui_interval_s10
 -quick: forces ui_use_cont false
 -sd, -sdmode: ui_sd, ui_sd_mode_t
