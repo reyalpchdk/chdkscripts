@@ -51,6 +51,7 @@ http://chdk.setepontos.com/index.php?topic=8997.0
 ** bv_ev_l1 - Original calculated bv/ev shift value if over threshold or limit, formerly "bv ev limit", "bv ev thesh"
 * Meter position is now adjustable
 * Improved support for chdkptp tethered shooting
+* "date", "time" columns now refer to the start of the shooting loop, rather than the end. "tick" column removed.
 
 ===Version 0.25 - May 6, 2018===
 * Add workaround to prevent aperture changes on cameras incorrectly defined to have ND even when ND threshold is disabled. Thanks c_joerg for reporting
@@ -431,8 +432,10 @@ Various free-form text messages that don't easily fit in a column. The first row
 ==sleep==
 How long the script waited between shots. Negative values mean the script wasn't able to maintain the requested frame rate.
 
-==start==
-The tick count (milliseconds since boot) of the start of the main loop. The values of shoot_ready, exp_start, raw_ready and raw_done are offsets form this value
+==date, time, start==
+The date, time and tick count (milliseconds since boot) of the start of a main loop iteration. The values of shoot_ready, exp_start, raw_ready and raw_done are millisecond offsets form "start"
+
+For the pre-shoot row, these values refer to the start of half press.
 
 =Control keys=
 Pressing menu ends the script. Pressing set turns on the display for 30 sec.
