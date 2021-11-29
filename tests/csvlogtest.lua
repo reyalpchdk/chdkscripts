@@ -297,7 +297,7 @@ log:init{
 		'col2',
 	},
 }
-log:set{col1='one',col2='two'}
+log:set{col1='one',col2=2}
 log:write()
 log:close()
 ]])
@@ -305,7 +305,7 @@ log:close()
 		local s=fsutil.readfile_e('logtest.csv')
 		testlib.assert_eq(s,[[
 col1,col2
-one,two
+one,2
 ]])
 		con:execwait(cam_script_mini..[[
 log:init{
@@ -316,7 +316,7 @@ log:init{
 		'col2',
 	},
 }
-log:set{col1='three',col2='four'}
+log:set{col1=true,col2='four'}
 log:write()
 log:close()
 ]])
@@ -324,9 +324,9 @@ log:close()
 		s=fsutil.readfile_e('logtest.csv')
 		testlib.assert_eq(s,[[
 col1,col2
-one,two
+one,2
 col1,col2
-three,four
+true,four
 ]])
 	end,
 	setup=testlib.setup_ensure_connected,
