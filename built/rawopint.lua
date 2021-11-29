@@ -1807,7 +1807,6 @@ log:init{
 	cols={
 		'date',
 		'time',
-		'tick',
 		'exp',
 		'start',
 		'shoot_ready',
@@ -1827,13 +1826,6 @@ log:init{
 	},
 	-- columns automatically set at write time from functions
 	funcs={
-		date=function()
-			return os.date('%m/%d/%Y')
-		end,
-		time=function()
-			return os.date('%H:%M:%S')
-		end,
-		tick=get_tick_count,
 		exp=get_exp_count,
 		vbatt=get_vbatt,
 		tsensor=function()
@@ -2068,6 +2060,13 @@ function run()
 	-- only needs to wait for metering, exposure calc etc
 	hook_raw.set(10000)
 
+	-- times for pre-shoot
+	log:set{
+		start=get_tick_count(),
+		date=os.date('%m/%d/%Y'),
+		time=os.date('%H:%M:%S'),
+	}
+
 	press('shoot_half')
 
 	repeat sleep(10) until get_shooting()
@@ -2094,6 +2093,11 @@ function run()
 	end
 	local user_exit
 	for shot=1,ui_shots do
+		log:set{
+			start=get_tick_count(),
+			date=os.date('%m/%d/%Y'),
+			time=os.date('%H:%M:%S'),
+		}
 		-- poll / reset click state
 		-- camera will generally take while to be ready for next shot, so extra wait here shouldn't hurt
 		wait_click(10)
@@ -2121,8 +2125,6 @@ function run()
 		if not cont then
 			press('shoot_full_only')
 		end
-		local t_start=get_tick_count()
-		log:set{start=t_start}
 		-- wait until the hook is reached
 		hook_shoot.wait_ready()
 		logtime('shoot_ready')

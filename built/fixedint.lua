@@ -761,8 +761,9 @@ function run()
 		-- column names
 		cols={
 			'date',
-			'tick',
+			'time',
 			'exp',
+			'start',
 			'exp_start',
 			'sleep',
 			'vbatt',
@@ -774,10 +775,6 @@ function run()
 		},
 		-- columns automatically set at write time from functions
 		funcs={
-			date=function()
-				return os.date('%m/%d/%Y %H:%M:%S')
-			end,
-			tick=get_tick_count,
 			exp=get_exp_count,
 			vbatt=get_vbatt,
 			tsensor=function()
@@ -947,6 +944,12 @@ function run()
 	end
 	for shot=1,ui_shots do
 		print("shot ",shot,"/",ui_shots)
+		log:set{
+			start=get_tick_count(),
+			date=os.date('%m/%d/%Y'),
+			time=os.date('%H:%M:%S'),
+		}
+
 		-- poll / reset click state
 		-- camera will generally take while to be ready for next shot, so extra wait here shouldn't hurt
 		wait_click(10)
