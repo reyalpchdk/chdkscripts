@@ -48,6 +48,12 @@ function log:init(opts)
 	if not opts then
 		error('missing opts')
 	end
+	if not opts.name then
+		error('missing name')
+	end
+	if type(opts.cols) ~= 'table' or #opts.cols < 1 then
+		error('bad or empty cols')
+	end
 	self.cols=unpack_cols(opts.cols)
 	self.vals={}
 	self.funcs={}
@@ -72,6 +78,19 @@ function log:init(opts)
 	elseif self.buffer_mode ~= 'os' and self.buffer_mode ~= 'sync' then
 		error('invalid buffer mode '..tostring(self.buffer_mode))
 	end
+	if opts.quote_mode ~= nil then
+		if opts.quote_mode == 'never' then
+			self.quote_mode = false
+		else
+			self.quote_mode = opts.quote_mode
+		end
+	else
+		self.quote_mode = 'auto'
+	end
+	if self.quote_mode ~= 'auto' and self.quote_mode ~= 'always' and self.quote_mode ~= false then
+		error('invalid quote mode '..tostring(self.quote_mode))
+	end
+
 	-- TODO may accept other options than sep later
 	if opts.tables then
 		for n,sep in pairs(opts.tables) do
@@ -129,9 +148,23 @@ function log:finish_write()
 	self.fh=nil
 end
 
+function log:quote_csv_cell(cell)
+	if self.quote_mode and ( self.quote_mode == 'always' or cell:match('[,"\r\n]') ) then
+		return '"'..cell:gsub('"','""')..'"'
+	end
+	return cell
+end
 function log:write_csv(data)
-	-- TODO should handle CSV quoting
-	self.fh:write(string.format("%s\n",table.concat(data,',')))
+	local quoted
+	if self.quote_mode then
+		quoted = {}
+		for i, cell in ipairs(data) do
+			table.insert(quoted,self:quote_csv_cell(cell))
+		end
+	else
+		quoted = data
+	end
+	self.fh:write(string.format("%s\n",table.concat(quoted,',')))
 end
 function log:write_data(data)
 	if self.buffer_mode == 'table' then
