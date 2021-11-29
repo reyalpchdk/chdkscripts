@@ -375,6 +375,42 @@ three,four
 	setup=testlib.setup_ensure_connected,
 	cleanup=cleanup_remove_both_csv,
 },
+{
+	'dtlogger',
+	function()
+		con:execwait(cam_script_mini..[[
+-- override get_tick_count so values are predictable
+local fake_tick = 1000
+function get_tick_count()
+	fake_tick = fake_tick + 10
+	return fake_tick
+end
+
+log:init{
+	name='A/logtest.csv',
+	cols={
+		'start',
+		't1',
+		't2',
+	},
+}
+logtime=log:dt_logger('start')
+log:set{start=get_tick_count()}
+logtime('t1')
+logtime('t2')
+log:write()
+log:close()
+]])
+		testlib.assert_cli_ok('d logtest.csv')
+		local s=fsutil.readfile_e('logtest.csv')
+		testlib.assert_eq(s,[[
+start,t1,t2
+1010,10,20
+]])
+	end,
+	setup=testlib.setup_ensure_connected,
+	cleanup=cleanup_remove_both_csv,
+},
 }})
 
 return tests
