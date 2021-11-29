@@ -342,7 +342,7 @@ function run()
 		-- poll / reset click state
 		-- camera will generally take while to be ready for next shot, so extra wait here shouldn't hurt
 		wait_click(10)
-		if is_key('menu') then
+		if is_key('menu') or read_usb_msg() == 'quit' then
 			-- prevent shutdown on finish if user abort
 			shutdown.opts.finish = false
 			logdesc('user exit')
