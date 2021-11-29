@@ -10,7 +10,7 @@ The following remoteshoot options are mapped to corresponding
 script options and override any settings in the glue section if used
 -shots: ui_shots
 -int: ui_interval_s10
--cont: ui_use_cont
+-quick: forces ui_use_cont false
 -sd, -sdmode: ui_sd, ui_sd_mode_t
 -jpg, -craw, -raw, -dng: ui_use_raw_e, ui_canon_img_fmt
 
@@ -182,8 +182,10 @@ if rs_opts then
 	if rs_opts.int then
 		ui_interval_s10=rs_opts.int/100
 	end
-	-- for convenience, respect -cont
-	ui_use_cont=rs_opts.cont
+	-- if -quick used, override cont off
+	if rs_opts.quick then
+		ui_use_cont=false
+	end
 	-- image format must match what remoteshoot expects, override to "Default"
 	-- required for canon formats, not strictly required for CHDK raw
 	ui_use_raw_e=0

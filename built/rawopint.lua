@@ -250,7 +250,12 @@ function log:finish_write()
 end
 
 function log:quote_csv_cell(cell)
-	if self.quote_mode and ( self.quote_mode == 'always' or cell:match('[,"\r\n]') ) then
+	if not self.quote_mode then
+		return cell
+	end
+	-- ensure string
+	cell = tostring(cell)
+	if self.quote_mode == 'always' or cell:match('[,"\r\n]') then
 		return '"'..cell:gsub('"','""')..'"'
 	end
 	return cell
@@ -352,14 +357,14 @@ function log:dt_logger(base_name,name)
 			if not self.vals[name] then
 				error('invalid col name')
 			end
-			self.vals[name]=get_tick_count() - self.vals[base_name]
+			self.vals[name]=tostring(get_tick_count() - self.vals[base_name])
 		end
 	end
 	if not self.vals[name] then
 		error('invalid col name')
 	end
 	return function()
-		self.vals[name]=get_tick_count() - self.vals[base_name]
+		self.vals[name]=tostring(get_tick_count() - self.vals[base_name])
 	end
 end
 
