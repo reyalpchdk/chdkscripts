@@ -2101,7 +2101,7 @@ function run()
 		-- poll / reset click state
 		-- camera will generally take while to be ready for next shot, so extra wait here shouldn't hurt
 		wait_click(10)
-		if is_key('menu') then
+		if is_key('menu') or read_usb_msg() == 'quit' then
 			user_exit=true
 		end
 		if user_exit then
