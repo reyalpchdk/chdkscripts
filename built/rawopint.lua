@@ -118,9 +118,10 @@ return strutil
 end)()
 package.loaded['reylib/strutil']=stru -- end inline reylib/strutil
 
-log=(function() -- inline reylib/csvlog
+csvlog=(function() -- inline reylib/csvlog
 -- csv log module. License: GPL
-local log={}
+local csvlog={}
+local log_methods = {}
 
 -- 'cols' can be either a simple array of names, or include sub-arrays
 -- to allow modules to export their own list of columns
@@ -145,7 +146,7 @@ local function unpack_cols(cols_init, cols, depth)
 	return cols
 end
 
-function log:init(opts)
+function log_methods:init(opts)
 	if not opts then
 		error('missing opts')
 	end
@@ -231,7 +232,7 @@ function log:init(opts)
 		self:flush()
 	end
 end
-function log:prepare_write()
+function log_methods:prepare_write()
 	if self.buffer_mode == 'os' then
 		return
 	end
@@ -241,7 +242,7 @@ function log:prepare_write()
 		error('failed to open log')
 	end
 end
-function log:finish_write()
+function log_methods:finish_write()
 	if self.buffer_mode == 'os' then
 		return
 	end
@@ -249,7 +250,7 @@ function log:finish_write()
 	self.fh=nil
 end
 
-function log:quote_csv_cell(cell)
+function log_methods:quote_csv_cell(cell)
 	if not self.quote_mode then
 		return cell
 	end
@@ -260,7 +261,7 @@ function log:quote_csv_cell(cell)
 	end
 	return cell
 end
-function log:write_csv(data)
+function log_methods:write_csv(data)
 	local quoted
 	if self.quote_mode then
 		quoted = {}
@@ -272,7 +273,7 @@ function log:write_csv(data)
 	end
 	self.fh:write(string.format("%s\n",table.concat(quoted,',')))
 end
-function log:write_data(data)
+function log_methods:write_data(data)
 	if self.buffer_mode == 'table' then
 		table.insert(self.lines,data)
 		return
@@ -282,7 +283,7 @@ function log:write_data(data)
 	self:finish_write()
 end
 
-function log:flush()
+function log_methods:flush()
 	if self.buffer_mode == 'os' then
 		if self.fh then
 			self.fh:flush()
@@ -301,7 +302,7 @@ function log:flush()
 	-- 'sync' is flushed every line
 end
 
-function log:write()
+function log_methods:write()
 	local data={}
 	for i,name in ipairs(self.cols) do
 		local v
@@ -317,7 +318,7 @@ function log:write()
 	self:write_data(data)
 	self:reset_vals()
 end
-function log:reset_vals()
+function log_methods:reset_vals()
 	for i,name in ipairs(self.cols) do
 		if self.tables[name] then
 			self.vals[name] = {}
@@ -326,7 +327,7 @@ function log:reset_vals()
 		end
 	end
 end
-function log:set(vals)
+function log_methods:set(vals)
 	for name,v in pairs(vals) do
 		if not self.vals[name] then
 			error("unknown log col "..tostring(name))
@@ -345,7 +346,7 @@ end
 return a function that records time offset from col named base_name
 if name is not provided, function expects target aname as arg
 ]]
-function log:dt_logger(base_name,name)
+function log_methods:dt_logger(base_name,name)
 	if not self.vals[base_name] then
 		error('invalid base field name')
 	end
@@ -371,7 +372,7 @@ end
 --[[
 return a printf-like function that appends to table col
 ]]
-function log:text_logger(name)
+function log_methods:text_logger(name)
 	if not self.vals[name] then
 		error('invalid col name')
 	end
@@ -386,7 +387,7 @@ function log:text_logger(name)
 	end
 end
 
-function log:close()
+function log_methods:close()
 	if self.buffer_mode == 'table' then
 		self:flush()
 	end
@@ -394,10 +395,19 @@ function log:close()
 		self.fh:close()
 	end
 end
-return log
+
+function csvlog.new(opts)
+	local t={}
+	for k,v in pairs(log_methods) do
+		t[k] = v
+	end
+	t:init(opts)
+	return t
+end
+return csvlog
 
 end)()
-package.loaded['reylib/csvlog']=log -- end inline reylib/csvlog
+package.loaded['reylib/csvlog']=csvlog -- end inline reylib/csvlog
 
 disp=(function() -- inline reylib/disp
 -- display control module. License: GPL
@@ -1798,7 +1808,7 @@ disp:init{
 	mode = string.lower(ui_display_mode_t.value),
 }
 
-log:init{
+log = csvlog.new{
 	name="A/rawopint.csv",
 	append=(ui_log_mode.value=='Append'),
 	dummy=(ui_log_mode.value=='None'),
