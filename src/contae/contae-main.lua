@@ -65,7 +65,7 @@ require'hookutil'
 require'rawoplib'
 props=require'propcase'
 
-log = require'reylib/csvlog' --[!inline]
+csvlog = require'reylib/csvlog' --[!inline]
 
 exp = require'reylib/rawexp' --[!inline]
 
@@ -285,7 +285,7 @@ if vid then
 	error('not in still mode')
 end
 
-log:init{
+log = csvlog.new{
 	name="A/contae.csv",
 	append=(ui_log_mode.value=='Append'),
 	dummy=(ui_log_mode.value=='None'),
