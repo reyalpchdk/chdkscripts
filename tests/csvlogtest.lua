@@ -29,7 +29,7 @@ local cam_script = inlinemods.process_string(fsutil.readfile_e(cam_script_name),
 					})
 
 local cam_script_mini = inlinemods.process_string([[
-local log=require'reylib/csvlog' --[!inline]
+local csvlog=require'reylib/csvlog' --[!inline]
 ]],{
 						modpath='../src',
 						source_name=cam_script_name
@@ -56,7 +56,7 @@ local tests = testlib.new_test({
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log:init()
+csvlog.new()
 ]])
 			end,{etype='exec_runtime',msg_match='missing opts'})
 	end,
@@ -67,7 +67,7 @@ log:init()
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log:init{}
+csvlog.new{}
 ]])
 			end,{etype='exec_runtime',msg_match='missing name'})
 	end,
@@ -78,7 +78,7 @@ log:init{}
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log:init{
+csvlog.new{
 	name='A/logtest.csv',
 }
 ]])
@@ -91,7 +91,7 @@ log:init{
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log:init{
+csvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -112,7 +112,7 @@ log:init{
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log:init{
+csvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -131,7 +131,7 @@ log:init{
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log:init{
+log=csvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -154,7 +154,7 @@ test
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log:init{
+log=csvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -177,7 +177,7 @@ test
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log:init{
+log=csvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -290,7 +290,7 @@ line, boring ,
 	'append',
 	function()
 		con:execwait(cam_script_mini..[[
-log:init{
+log=csvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'col1',
@@ -308,7 +308,7 @@ col1,col2
 one,2
 ]])
 		con:execwait(cam_script_mini..[[
-log:init{
+log=csvlog.new{
 	name='A/logtest.csv',
 	append=true,
 	cols={
@@ -336,7 +336,7 @@ true,four
 	'overwrite',
 	function()
 		con:execwait(cam_script_mini..[[
-log:init{
+log=csvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'col1',
@@ -354,7 +354,7 @@ col1,col2
 one,two
 ]])
 		con:execwait(cam_script_mini..[[
-log:init{
+log=csvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'col1',
@@ -386,7 +386,7 @@ function get_tick_count()
 	return fake_tick
 end
 
-log:init{
+log=csvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'start',
