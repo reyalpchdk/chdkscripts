@@ -70,7 +70,7 @@ set MAKE\_GLUE
 There may be documentation for these someday, but for now, [use the source](src/reylib)
 
 * `clkstart.lua` - Wait for a particular time to start shooting
-* `csvlog.lua` - Log values to csv file
+* `csvlog.lua` - Log values to csv file ([documentation](src/reylib/csvlog.md))
 * `disp.lua` - Control display / backlight
 * `focus.lua` - Control focus overrides, selecting supported focus override mode
 * `rawexp.lua` - Calculate exposure from raw data of previous shot, with smoothing, limits
