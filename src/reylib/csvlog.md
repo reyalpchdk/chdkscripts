@@ -58,9 +58,9 @@ log = csvlog.new{
    * "os" opens the file once in csvlog.new, uses write to write each line, and closes the file on `log:close`. This means the camera OS handles file buffering, and writes have relatively little impact on script performance. However, it also means that a script crash or error can result in losing a lot of log lines.
    * "table" stores all log values in a Lua table until `log:flush` or `log:close` is called, at which point, the log is opened, appended to and closed. This allows the script to manage writes, or avoid them entirely while the script is running, but a script that logs a lot can easily exhaust available memory.
    * "sync" opens the file, appends and closes for each `log:write` call. This minimizes information loss crashes, but can significantly impact script performance because of the many small writes and file flushes.
-* `quote_mode` - string: one of "never", "auto", or "always". Defines how log values are quoted in the CSV. Default "auto". Quoting is generally consistent with [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180), except that newlines are unix-style LF rather than CRLF. Quotable characters are comma, double quote, CR and LF.
+* `quote_mode` - string: one of "never", "auto", or "always". Defines how log values are quoted in the CSV. Default "auto". Format when quoted is generally consistent with [RFC 4180](https://datatracker.ietf.org/doc/html/rfc4180), except that newlines are unix-style LF rather than CRLF. Quotable characters are comma, double quote, CR and LF.
    * "never" no quoting is done. If the script puts quotable characters in values, the log will be not be a well formed CSV
-   * "auto" log values are checked for quotable characters, and quotes any fields that contain them.
+   * "auto" log values are checked for quotable characters, and any fields that contain them are quoted.
    * "always" log values are always quoted.
 
 ## Defining columns
