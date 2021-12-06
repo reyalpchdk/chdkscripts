@@ -39,7 +39,7 @@ http://chdk.setepontos.com/index.php?topic=8997.0
 * Fixed bug which caused Ev shift to result in incorrect Bv / Ev shift values, even when Bv / Ev shift was not enabled
 * Add meter96_tgt column, records target meter96 with Ev shifts applied
 * Add options to control smoothing, based on suggestion by dolomiti_timelapse https://chdk.setepontos.com/index.php?topic=12697.msg146625#msg146625
-** Also gixes issue in "Smooth overshoot" logic which caused flickering in some situations
+** Also fixes issue in "Smooth overshoot" logic which caused flickering in some situations
 * Convert ev_change to imath so final change values are rounded
 * Make log columns consistently refer to the current shot, except for d_ev* which refer to the next shot
 * Log limit related values in columns rather than desc. These values are only logged when the corresponding condition is present
