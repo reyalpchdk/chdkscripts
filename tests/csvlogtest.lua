@@ -32,7 +32,7 @@ local cam_script_mini = inlinemods.process_string([[
 local csvlog=require'reylib/csvlog' --[!inline]
 ]],{
 						modpath='../src',
-						source_name=cam_script_name
+						source_name='cam_script_mini'
 					})
 local function cleanup_remove_local_csv(self,opts)
 	if lfs.attributes('logtest.csv','mode') == 'file' and not opts.keep_files then
