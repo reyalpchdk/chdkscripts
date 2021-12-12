@@ -27,7 +27,7 @@ log = xsvlog.new{
 --	buffer_mode='os',
 --	quote_mode='auto',
 
--- columns - required
+-- columns - at least one column is required
 	cols={
 		'date',
 		'time',

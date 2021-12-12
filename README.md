@@ -101,4 +101,5 @@ bugs and suggest code changes.
 The author can be emailed at reyalp (at) gmail dot com, but the CHDK forum is
 the preferred place for discussion related to these scripts.
 
-The author can also sometimes be found in [#chdk](https://web.libera.chat/?channels=#chdk) on libera.chat.
+The author can also sometimes be found in [#chdk](https://web.libera.chat/?channels=#chdk)
+on [libera.chat](https://libera.chat/).
