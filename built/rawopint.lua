@@ -118,7 +118,7 @@ return strutil
 end)()
 package.loaded['reylib/strutil']=stru -- end inline reylib/strutil
 
-csvlog=(function() -- inline reylib/csvlog
+xsvlog=(function() -- inline reylib/xsvlog
 -- csv log module. License: GPL
 local csvlog={}
 local log_methods = {}
@@ -156,6 +156,16 @@ function log_methods:init(opts)
 	if type(opts.cols) ~= 'table' or #opts.cols < 1 then
 		error('bad or empty cols')
 	end
+	self.delim = opts.delim or ','
+	if self.delim:match('["\r\n]') or self.delim:len() ~= 1 then
+		error('bad delimiter')
+	end
+	if self.delim:match('[%a%d]') then
+		self.delim_pat = self.delim
+	else
+		self.delim_pat = '%'..self.delim
+	end
+
 	self.cols=unpack_cols(opts.cols)
 	self.vals={}
 	self.funcs={}
@@ -170,11 +180,7 @@ function log_methods:init(opts)
 	end
 	self.name = opts.name
 	self.dummy = opts.dummy
-	if opts.buffer_mode then
-		self.buffer_mode = opts.buffer_mode
-	else
-		self.buffer_mode = 'os'
-	end
+	self.buffer_mode = opts.buffer_mode or 'os'
 	if self.buffer_mode == 'table' then
 		self.lines={}
 	elseif self.buffer_mode ~= 'os' and self.buffer_mode ~= 'sync' then
@@ -256,7 +262,7 @@ function log_methods:quote_csv_cell(cell)
 	end
 	-- ensure string
 	cell = tostring(cell)
-	if self.quote_mode == 'always' or cell:match('[,"\r\n]') then
+	if self.quote_mode == 'always' or cell:match('['..self.delim_pat..'"\r\n]') then
 		return '"'..cell:gsub('"','""')..'"'
 	end
 	return cell
@@ -271,7 +277,7 @@ function log_methods:write_csv(data)
 	else
 		quoted = data
 	end
-	self.fh:write(string.format("%s\n",table.concat(quoted,',')))
+	self.fh:write(string.format("%s\n",table.concat(quoted,self.delim)))
 end
 function log_methods:write_data(data)
 	if self.buffer_mode == 'table' then
@@ -358,14 +364,14 @@ function log_methods:dt_logger(base_name,name)
 			if not self.vals[name] then
 				error('invalid col name')
 			end
-			self.vals[name]=tostring(get_tick_count() - self.vals[base_name])
+			self:set{[name]=tostring(get_tick_count() - self.vals[base_name])}
 		end
 	end
 	if not self.vals[name] then
 		error('invalid col name')
 	end
 	return function()
-		self.vals[name]=tostring(get_tick_count() - self.vals[base_name])
+		self:set{[name]=tostring(get_tick_count() - self.vals[base_name])}
 	end
 end
 
@@ -383,7 +389,7 @@ function log_methods:text_logger(name)
 		return function() end
 	end
 	return function(fmt,...)
-		table.insert(self.vals[name],string.format(fmt,...))
+		self:set{[name]=string.format(fmt,...)}
 	end
 end
 
@@ -407,7 +413,7 @@ end
 return csvlog
 
 end)()
-package.loaded['reylib/csvlog']=csvlog -- end inline reylib/csvlog
+package.loaded['reylib/xsvlog']=xsvlog -- end inline reylib/xsvlog
 
 disp=(function() -- inline reylib/disp
 -- display control module. License: GPL
@@ -1808,7 +1814,7 @@ disp:init{
 	mode = string.lower(ui_display_mode_t.value),
 }
 
-log = csvlog.new{
+log = xsvlog.new{
 	name="A/rawopint.csv",
 	append=(ui_log_mode.value=='Append'),
 	dummy=(ui_log_mode.value=='None'),
