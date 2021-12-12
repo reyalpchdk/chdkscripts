@@ -85,7 +85,7 @@ save_raw=get_raw()
 
 stru=require'reylib/strutil' --[!inline]
 
-csvlog = require'reylib/csvlog' --[!inline]
+xsvlog = require'reylib/xsvlog' --[!inline]
 
 disp = require'reylib/disp' --[!inline]
 
@@ -143,7 +143,7 @@ function run()
 	disp:init{
 		mode = string.lower(ui_display_mode_t.value)
 	}
-	log = csvlog.new{
+	log = xsvlog.new{
 		name="A/fixedint.csv",
 		append=(ui_log_mode.value=='Append'),
 		dummy=(ui_log_mode.value=='None'),

@@ -1,6 +1,6 @@
 TOPDIR=../..
 SCRIPTNAME=contae
-LIBS=csvlog rawexp
+LIBS=xsvlog rawexp
 
 include $(TOPDIR)/script-include.mk
 

@@ -70,12 +70,12 @@ set MAKE\_GLUE
 There may be documentation for these someday, but for now, [use the source](src/reylib)
 
 * `clkstart.lua` - Wait for a particular time to start shooting
-* `csvlog.lua` - Log values to csv file ([documentation](src/reylib/csvlog.md))
 * `disp.lua` - Control display / backlight
 * `focus.lua` - Control focus overrides, selecting supported focus override mode
 * `rawexp.lua` - Calculate exposure from raw data of previous shot, with smoothing, limits
 * `shutdown.lua` - Trigger shutdown on conditions like low batter, low SD card space
 * `strutil.lua` - String utility functions
+* `xsvlog.lua` - Log values to CSV/TSV file ([documentation](src/reylib/xsvlog.md))
 
 Each module is a Lua table which encapsulates the required state and methods. However,
 some modules assume that other modules are present, for example, the exposure module requires
@@ -100,3 +100,5 @@ bugs and suggest code changes.
 
 The author can be emailed at reyalp (at) gmail dot com, but the CHDK forum is
 the preferred place for discussion related to these scripts.
+
+The author can also sometimes be found in [#chdk](https://web.libera.chat/?channels=#chdk) on libera.chat.

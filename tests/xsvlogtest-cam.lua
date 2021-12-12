@@ -15,13 +15,13 @@
 
 
 --[[
-camera side file to test csvlog lib
+camera side file to test xsvlog lib
 chdkptp script expected to prepend with assigned opt values or leave nil for defaults
 ]]
-local csvlog=require'reylib/csvlog' --[!inline]
+local xsvlog=require'reylib/xsvlog' --[!inline]
 
 local row_num=0
-log = csvlog.new{
+log = xsvlog.new{
 	name=opt_name,
 	append=opt_append,
     dummy=opt_dummy,

@@ -14,22 +14,22 @@
 ]]
 
 --[[
-chdkptp lua file to test csvlog lib
+chdkptp lua file to test xsvlog lib
 run with
- chdkptp -e'exec require"csvlogtest":do_test()'
+ chdkptp -e'exec require"xsvlogtest":do_test()'
 or a single test like
- chdkptp -e'exec require"csvlogtest":do_subtest("bad_init")'
+ chdkptp -e'exec require"xsvlogtest":do_subtest("bad_init")'
 ]]
 local inlinemods = require'extras/inlinemods'
 local testlib = require'testlib'
-local cam_script_name = 'csvlogtest-cam.lua'
+local cam_script_name = 'xsvlogtest-cam.lua'
 local cam_script = inlinemods.process_string(fsutil.readfile_e(cam_script_name),{
 						modpath='../src',
 						source_name=cam_script_name
 					})
 
 local cam_script_mini = inlinemods.process_string([[
-local csvlog=require'reylib/csvlog' --[!inline]
+local xsvlog=require'reylib/xsvlog' --[!inline]
 ]],{
 						modpath='../src',
 						source_name='cam_script_mini'
@@ -50,13 +50,13 @@ local function cleanup_remove_both_csv(self,opts)
 end
 
 local tests = testlib.new_test({
-'csvlog',{
+'xsvlog',{
 {
 	'bad_init',
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-csvlog.new()
+xsvlog.new()
 ]])
 			end,{etype='exec_runtime',msg_match='missing opts'})
 	end,
@@ -67,7 +67,7 @@ csvlog.new()
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-csvlog.new{}
+xsvlog.new{}
 ]])
 			end,{etype='exec_runtime',msg_match='missing name'})
 	end,
@@ -78,7 +78,7 @@ csvlog.new{}
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-csvlog.new{
+xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test',
@@ -95,7 +95,7 @@ csvlog.new{
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-csvlog.new{
+xsvlog.new{
 	name='A/logtest.csv',
 }
 ]])
@@ -108,7 +108,7 @@ csvlog.new{
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-csvlog.new{
+xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -129,7 +129,7 @@ csvlog.new{
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-csvlog.new{
+xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -148,7 +148,7 @@ csvlog.new{
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log=csvlog.new{
+log=xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -171,7 +171,7 @@ test
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log=csvlog.new{
+log=xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -194,7 +194,7 @@ test
 	function()
 		testlib.assert_thrown(function()
 				con:execwait(cam_script_mini..[[
-log=csvlog.new{
+log=xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'test'
@@ -329,7 +329,7 @@ opt_delim='\t'
 	'append',
 	function()
 		con:execwait(cam_script_mini..[[
-log=csvlog.new{
+log=xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'col1',
@@ -347,7 +347,7 @@ col1,col2
 one,2
 ]])
 		con:execwait(cam_script_mini..[[
-log=csvlog.new{
+log=xsvlog.new{
 	name='A/logtest.csv',
 	append=true,
 	cols={
@@ -375,7 +375,7 @@ true,four
 	'overwrite',
 	function()
 		con:execwait(cam_script_mini..[[
-log=csvlog.new{
+log=xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'col1',
@@ -393,7 +393,7 @@ col1,col2
 one,two
 ]])
 		con:execwait(cam_script_mini..[[
-log=csvlog.new{
+log=xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'col1',
@@ -425,7 +425,7 @@ function get_tick_count()
 	return fake_tick
 end
 
-log=csvlog.new{
+log=xsvlog.new{
 	name='A/logtest.csv',
 	cols={
 		'start',

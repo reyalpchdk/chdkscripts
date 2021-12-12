@@ -91,7 +91,7 @@ capmode=require'capmode'
 
 stru=require'reylib/strutil' --[!inline]
 
-csvlog = require'reylib/csvlog' --[!inline]
+xsvlog = require'reylib/xsvlog' --[!inline]
 
 disp = require'reylib/disp' --[!inline]
 
@@ -184,7 +184,7 @@ disp:init{
 	mode = string.lower(ui_display_mode_t.value),
 }
 
-log = csvlog.new{
+log = xsvlog.new{
 	name="A/rawopint.csv",
 	append=(ui_log_mode.value=='Append'),
 	dummy=(ui_log_mode.value=='None'),
