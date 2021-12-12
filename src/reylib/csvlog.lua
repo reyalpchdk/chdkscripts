@@ -55,6 +55,16 @@ function log_methods:init(opts)
 	if type(opts.cols) ~= 'table' or #opts.cols < 1 then
 		error('bad or empty cols')
 	end
+	self.delim = opts.delim or ','
+	if self.delim:match('["\r\n]') or self.delim:len() ~= 1 then
+		error('bad delimiter')
+	end
+	if self.delim:match('[%a%d]') then
+		self.delim_pat = self.delim
+	else
+		self.delim_pat = '%'..self.delim
+	end
+
 	self.cols=unpack_cols(opts.cols)
 	self.vals={}
 	self.funcs={}
@@ -69,11 +79,7 @@ function log_methods:init(opts)
 	end
 	self.name = opts.name
 	self.dummy = opts.dummy
-	if opts.buffer_mode then
-		self.buffer_mode = opts.buffer_mode
-	else
-		self.buffer_mode = 'os'
-	end
+	self.buffer_mode = opts.buffer_mode or 'os'
 	if self.buffer_mode == 'table' then
 		self.lines={}
 	elseif self.buffer_mode ~= 'os' and self.buffer_mode ~= 'sync' then
@@ -155,7 +161,7 @@ function log_methods:quote_csv_cell(cell)
 	end
 	-- ensure string
 	cell = tostring(cell)
-	if self.quote_mode == 'always' or cell:match('[,"\r\n]') then
+	if self.quote_mode == 'always' or cell:match('['..self.delim_pat..'"\r\n]') then
 		return '"'..cell:gsub('"','""')..'"'
 	end
 	return cell
@@ -170,7 +176,7 @@ function log_methods:write_csv(data)
 	else
 		quoted = data
 	end
-	self.fh:write(string.format("%s\n",table.concat(quoted,',')))
+	self.fh:write(string.format("%s\n",table.concat(quoted,self.delim)))
 end
 function log_methods:write_data(data)
 	if self.buffer_mode == 'table' then

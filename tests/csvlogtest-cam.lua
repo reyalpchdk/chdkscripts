@@ -27,6 +27,7 @@ log = csvlog.new{
     dummy=opt_dummy,
 	quote_mode=opt_quote_mode,
 	buffer_mode=opt_buffer_mode,
+	delim=opt_delim,
 	-- column names
 	cols={
 		'func1',

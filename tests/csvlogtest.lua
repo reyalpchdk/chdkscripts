@@ -74,6 +74,23 @@ csvlog.new{}
 	setup=testlib.setup_ensure_connected,
 },
 {
+	'bad_delim',
+	function()
+		testlib.assert_thrown(function()
+				con:execwait(cam_script_mini..[[
+csvlog.new{
+	name='A/logtest.csv',
+	cols={
+		'test',
+	},
+	delim='hi',
+}
+]])
+			end,{etype='exec_runtime',msg_match='bad delimiter'})
+	end,
+	setup=testlib.setup_ensure_connected,
+},
+{
 	'bad_cols',
 	function()
 		testlib.assert_thrown(function()
@@ -282,6 +299,28 @@ func1,test_1,test_2,desc
 4,new
 line, boring ,
 ]])
+	end,
+	setup=testlib.setup_ensure_connected,
+	cleanup=cleanup_remove_both_csv,
+},
+{
+	'tsv',
+	function()
+		con:execwait([[
+opt_name='A/logtest.csv'
+opt_append=false
+opt_delim='\t'
+]]..cam_script)
+		testlib.assert_cli_ok('d logtest.csv')
+		local s=fsutil.readfile_e('logtest.csv')
+		testlib.assert_eq(s,
+'func1\ttest_1\ttest_2\tdesc\n'..
+'1\t\t\tthis is the first data row\n'..
+'2\t1\ttwo\tthis is the second data row, it has a comma / and a second item\n'..
+'3\thello, world\t"goodbye ""world"""\t\n'..
+'4\t"new\n'..
+'line"\t boring \t\n'
+)
 	end,
 	setup=testlib.setup_ensure_connected,
 	cleanup=cleanup_remove_both_csv,
