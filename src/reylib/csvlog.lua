@@ -257,14 +257,14 @@ function log_methods:dt_logger(base_name,name)
 			if not self.vals[name] then
 				error('invalid col name')
 			end
-			self.vals[name]=tostring(get_tick_count() - self.vals[base_name])
+			self:set{[name]=tostring(get_tick_count() - self.vals[base_name])}
 		end
 	end
 	if not self.vals[name] then
 		error('invalid col name')
 	end
 	return function()
-		self.vals[name]=tostring(get_tick_count() - self.vals[base_name])
+		self:set{[name]=tostring(get_tick_count() - self.vals[base_name])}
 	end
 end
 
@@ -282,7 +282,7 @@ function log_methods:text_logger(name)
 		return function() end
 	end
 	return function(fmt,...)
-		table.insert(self.vals[name],string.format(fmt,...))
+		self:set{[name]=string.format(fmt,...)}
 	end
 end
 

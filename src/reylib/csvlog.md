@@ -24,7 +24,7 @@ log = csvlog.new{
 --	append=false
 --	dummy=false
 --	buffer_mode='os'
---  quote_mode='auto'
+--	quote_mode='auto'
 
 -- columns - required
 	cols={
@@ -99,7 +99,7 @@ logtime('stage2') -- log time between start and stage two into column stage2
 
 ```
 ## Other functions
-* `log:close` should be called when the script ends, to ensure the log is fully written to file.
+* `log:close` should be called when the script ends, to ensure the log is fully written to file. No further writes are possible after close is called. To ensure output is written without closing, use `log:flush`.
 * `log:flush` may be called to ensure the most recent values written with `log:write` are written to SD card. The effect depends on the buffer mode: For "os", Lua `file:flush` is called. For "table", the file is opened, all pending lines are written, and the file is closed. For "sync", `log:flush` has no effect, since each row is automatically flushed.
 
 
