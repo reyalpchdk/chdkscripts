@@ -221,7 +221,7 @@ class RawOpData:
               f" {self.init_vals['chdk_version']} rawopint {self.init_vals['rawopint_version']}")
         print(f"{len(self.rows)} frames, {self.init_vals['interval']/1000}s interval,"
               f" {self.start_date} {self.start_time} - {self.end_date} {self.end_time},"
-              f" shot {self.start_exp:04d} - {self.end_exp:04d}")
+              f" exp# {self.start_exp:04d} - {self.end_exp:04d}")
         print(f"ev_change_max: {self.fmt_ini_ev96('ev_change_max')}"
               f" ev_shift: {self.fmt_ini_ev96('ev_shift')} ev_use_initial:{self.init_vals['ev_use_initial']}")
         if self.init_vals['bv_ev_shift_pct'] == 0:
