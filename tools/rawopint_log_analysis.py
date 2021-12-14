@@ -18,6 +18,7 @@ module for loading / analyzing rawopint logs
 
 import csv
 import re
+import os
 
 class RawOpData:
     '''
@@ -263,4 +264,23 @@ class RawOpData:
             for w in self.init_warnings:
                 print(w)
 
+    def get_image_filename(self, shot, imgdir='.', imgpfx = 'IMG_', imgext = '.JPG'):
+        if shot < 0 or shot >= len(self.exp):
+            raise ValueError(f'invalid shot {shot}')
+
+        return os.path.join(imgdir,f'{imgpfx}{int(self.exp[shot]):04}{imgext}')
+
+    def write_ffmpeg_framelist(self, filename, imgdir='.', imgpfx = 'IMG_', imgext = '.JPG', fps=15):
+        '''
+        Write a frame list for ffmpeg video creation
+        assumes images are in a signle directory
+        '''
+        with open(filename,'w') as f:
+            f.write('ffconcat version 1.0\n')
+            for shot in range(1,len(self.exp)):
+                fname = self.get_image_filename(shot, imgdir, imgpfx, imgext)
+                if not os.path.isfile(fname):
+                    raise ValueError(f'missing file {fname}')
+
+                f.write(f"file 'file:{fname}'\nduration {str(1/fps)}\n")
 
