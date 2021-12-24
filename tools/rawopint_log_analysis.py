@@ -63,6 +63,7 @@ class RawOpData:
     def __init__(self, header, data):
         self.rows=[]
         self.cols={}
+        self.header = header
 
         for rnum, rvals in enumerate(data):
             row = {}
