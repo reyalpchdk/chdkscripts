@@ -29,7 +29,7 @@ class RawOpDataPlot(RawOpData):
 
         x = int(round(x))
         s = f'y:{y:.2f}'
-        if x > 0 and x < self.len:
+        if x >= 0 and x < self.len:
             s += f' shot:{x}'
             for cname in cols:
                 if cname in self.cols:
