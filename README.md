@@ -67,7 +67,7 @@ with chdkptp remoteshoot. chdkptp must be installed to generate these files, and
 set MAKE\_GLUE
 
 # Lua Modules
-There may be documentation for these someday, but for now, [use the source](src/reylib)
+There may be documentation for more of these someday, but for now, [use the source](src/reylib) if there is no documentation link
 
 * `clkstart.lua` - Wait for a particular time to start shooting
 * `disp.lua` - Control display / backlight
@@ -90,15 +90,16 @@ recommended that you inline them.
 # Tools
 * `buildscript.py` - Used to build scripts
 * `rawopint_log_analysis.py` - Python class for loading and analyzing rawopint logs
-* `rawopint_log_plot.py` - Subclass of analysis class matplotlib plotting methods
-* `rawopint-analysis.ipynb` - Sample [jupyter notebook](https://jupyter.org/)
+* `rawopint_log_plot.py` - Subclass of analysis class with matplotlib-based plotting methods
+* [rawopint-analysis-tutorial.ipynb](tools/rawopint-analysis-tutorial.ipynb) - [Jupyter notebook](https://jupyter.org/) with some documentation. Viewable online, but interactive features are disabled.
+* `rawopint-analysis.ipynb` - Minimal [jupyter notebook](https://jupyter.org/) for use as a starting point for your own logs.
 
 # Contact
 The [CHDK forum](https://chdk.setepontos.com/index.php) is preferred for general
 questions and discussion. Github pull requests and issues can be used to report
 bugs and suggest code changes.
 
-The author can be emailed at reyalp (at) gmail dot com, but the CHDK forum is
+The author can be contacted by email at reyalp (at) gmail dot com, but the CHDK forum is
 the preferred place for discussion related to these scripts.
 
 The author can also sometimes be found in [#chdk](https://web.libera.chat/?channels=#chdk)
