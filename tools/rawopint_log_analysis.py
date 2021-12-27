@@ -61,36 +61,34 @@ class RawOpData:
         return runs
 
     def __init__(self, header, data):
-        self.rows=[]
+        self.str_cols_set = set(['date','time','desc'])
         self.cols={}
         self.header = header
+        self.header_map = {} # map header names to indexes
+        self.preshoot_vals = {}
+        self.quit_vals = {}
+
+        for i, name in enumerate(header):
+            self.cols[name] = []
+            self.header_map[name] = i
+            setattr(self,name,self.cols[name])
+            self.preshoot_vals[name] = self.convert_log_val(name,data[0][i])
 
         for rnum, rvals in enumerate(data):
-            row = {}
-            for i,name in enumerate(header):
-                row[name] = rvals[i]
-
+            # preshoot row handled above
             if rnum == 0:
-                self.preshoot_row = row
-            elif row['start'] == '': # keyboard and other exit conditions leave partial row
-                self.quit_row = row
-                break
-            else:
-                self.rows.append(row)
+                continue
 
-        self.len = len(self.rows)
+            # keyboard quit and other exit conditions leave partial row
+            # if exp_start is logged, a shot should have been taken, so don't treat as quit row
+            is_quit_row = (rvals[self.header_map['exp_start']] == '')
+            for i,name in enumerate(header):
+                if is_quit_row:
+                    self.quit_vals[name] = self.convert_log_val(name,rvals[i])
+                else:
+                    self.cols[name].append(self.convert_log_val(name,rvals[i]))
 
-        # TODO can be integrated with above now the CSV isn't loaded with DictReader
-        for name in self.rows[0]:
-            if name in {'date','time','desc'}:
-                self.cols[name] = [r[name] for r in self.rows]
-            elif name in set(self.all_apex96_cols) or name in set(self.all_weight_cols) or name=='exp':
-                self.cols[name] =[ None if r[name] == '' else int(r[name]) for r in self.rows]
-            else:
-                self.cols[name] =[ None if r[name] == '' else float(r[name]) for r in self.rows]
-
-            # convenience data.col_name for interactive stuff
-            setattr(self,name,self.cols[name])
+        self.len = len(self.cols['date'])
 
         # make column lists for this instance to support older versions
         self.apex96_cols = [x for x in self.all_apex96_cols if x in self.cols]
@@ -115,6 +113,19 @@ class RawOpData:
                     self.apex96_max = v
 
         self.parse_init_vals()
+
+    def convert_log_val(self,colname,val):
+        '''
+        convert string value from CSV to appropriate type
+        '''
+        if colname in set(self.str_cols_set):
+            return val
+        elif val == '':
+            return None
+        elif val.find('.') == -1:
+            return int(val)
+        else:
+            return float(val)
 
     def find_max(self,colname):
         '''
@@ -153,7 +164,7 @@ class RawOpData:
     def parse_init_vals(self):
         self.init_vals = {}
         self.init_warnings = []
-        for chunk in [x.strip() for x in self.preshoot_row['desc'].split('/')]:
+        for chunk in [x.strip() for x in self.preshoot_vals['desc'].split('/')]:
             chunk_parts = chunk.split(':',1)
             nm = chunk_parts[0]
             if len(chunk_parts) > 1:
@@ -188,7 +199,7 @@ class RawOpData:
                 else:
                     self.init_vals[chunk.replace(' ','_')] = True
 
-        init_frame=self.rows[0]['desc'].split('/')[0]
+        init_frame=self.preshoot_vals['desc'].split('/')[0]
         chunk=init_frame.split(':',1)[1].strip()
         for s in chunk.split(' '):
             parts=s.split('=')
@@ -221,11 +232,11 @@ class RawOpData:
         '''
         print(f"{self.init_vals['platform']}-{self.init_vals['platform_sub']}"
               f" {self.init_vals['chdk_version']} rawopint {self.init_vals['rawopint_version']}")
-        print(f"{len(self.rows)} frames, {self.init_vals['interval']/1000}s interval,"
+        print(f"{self.len} frames, {self.init_vals['interval']/1000}s interval,"
               f" {self.start_date} {self.start_time} - {self.end_date} {self.end_time},"
               f" exp# {self.start_exp:04d} - {self.end_exp:04d}")
         print(f"ev_change_max: {self.fmt_ini_ev96('ev_change_max')}"
-              f" ev_shift: {self.fmt_ini_ev96('ev_shift')} ev_use_initial:{self.init_vals['ev_use_initial']}")
+              f" ev_shift: {self.fmt_ini_ev96('ev_shift')} ev_use_initial: {self.init_vals['ev_use_initial']}")
         if self.init_vals['bv_ev_shift_pct'] == 0:
             print("bv ev shift: Off")
         else:
