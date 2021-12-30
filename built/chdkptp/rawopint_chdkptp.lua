@@ -28,6 +28,8 @@ Note:
 rawop histogram and meter may interfere with USB communication if they run too long
 ]]
 
+-- BEGIN menu glue
+
 -- @title raw meter intervalometer
 -- @chdk_version 1.5.1
 -- #ui_shots=0 "Shots (0 = unlimited)"
@@ -173,6 +175,9 @@ ui_raw_hook_sleep=0
 -- #ui_noyield=false "Disable script yield"
 ui_noyield=false
 
+-- END menu glue
+
+
 
 -- if invoked from remoteshoot, override menu options from remoteshoot
 -- options where required or reasonable mappings exist
@@ -206,3 +211,4 @@ if rs_opts then
 end
 
 loadfile("A/CHDK/SCRIPTS/rawopint.lua")()
+

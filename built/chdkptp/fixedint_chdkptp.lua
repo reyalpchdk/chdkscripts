@@ -24,6 +24,8 @@ like
 
 ]]
 
+-- BEGIN menu glue
+
 -- @title fixed exposure intervalometer
 -- @chdk_version 1.5.1
 -- #ui_shots=1 "Shots (0=unlimited)"
@@ -89,6 +91,9 @@ ui_log_mode={
  value="Append"
 }
 
+-- END menu glue
+
+
 
 -- override shots and interval using remoteshoot opts
 if rs_opts then
@@ -121,3 +126,4 @@ if rs_opts then
 end
 
 loadfile("A/CHDK/SCRIPTS/fixedint.lua")()
+
