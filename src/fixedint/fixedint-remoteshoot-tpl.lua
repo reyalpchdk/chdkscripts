@@ -56,4 +56,4 @@ if rs_opts then
 	end
 end
 
-loadfile("A/CHDK/SCRIPTS/fixedint.lua")()
+--[!gluebody]

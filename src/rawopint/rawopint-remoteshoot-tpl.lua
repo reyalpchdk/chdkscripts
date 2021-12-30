@@ -61,4 +61,4 @@ if rs_opts then
 	end
 end
 
-loadfile("A/CHDK/SCRIPTS/rawopint.lua")()
+--[!gluebody]
