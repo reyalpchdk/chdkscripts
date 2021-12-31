@@ -1,11 +1,8 @@
 --[[
 chdkptp "glue" script to use fixedint.lua with remoteshoot
-
 This file must be on the host PC running chdkptp, NOT on the camera
-
 from chdkptp, use like
  rs -script=fixedint_chdkptp.lua -cont=100 -int=5
-
 The following remoteshoot options are mapped to corresponding
 script options and override any settings in the glue section if used
 -shots (or number specified with -cont or -quick): ui_shots
@@ -13,19 +10,13 @@ script options and override any settings in the glue section if used
 -quick: forces ui_use_cont false
 -sd, -sdmode: ui_sd, ui_sd_mode_t
 -jpg, -craw, -raw, -dng: ui_use_raw_e, ui_canon_img_fmt
-
 Other remoteshoot options for camera side values (exposure etc) are ignored
-
 Edit the values below to change other settings
-
 This script can also be used to run fixedint from chdkptp without remoteshoot,
 like
  lua <fixedint_chdkptp.lua
-
 ]]
-
 -- BEGIN menu glue
-
 -- @title fixed exposure intervalometer
 -- @chdk_version 1.5.1
 -- #ui_shots=1 "Shots (0=unlimited)"
@@ -90,11 +81,7 @@ ui_log_mode={
  index=2,
  value="Append"
 }
-
 -- END menu glue
-
-
-
 -- override shots and interval using remoteshoot opts
 if rs_opts then
 	ui_shots=rs_opts.shots
@@ -124,6 +111,6 @@ if rs_opts then
 		ui_sd_mode_t.index = ({MF=2,AFL=3,AF=4})[ui_sd_mode_t.value]
 	end
 end
-
+-- BEGIN glued script
 loadfile("A/CHDK/SCRIPTS/fixedint.lua")()
-
+-- END glued script
