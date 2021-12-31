@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 with CHDK. If not, see <http://www.gnu.org/licenses/>.
 ]]
 
---[!inline_start]
+--[!inline:module_start]
 -- shutdown handling module. License: GPL
 local shutdown={}
 function shutdown:init(opts)

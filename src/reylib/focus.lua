@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 with CHDK. If not, see <http://www.gnu.org/licenses/>.
 ]]
 
---[!inline_start]
+--[!inline:module_start]
 -- focus override module. License: GPL
 local focus={
 	mode_names={'AF','AFL','MF'},

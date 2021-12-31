@@ -1,4 +1,9 @@
 --[[
+This is a template to generate glue scripts. Everything below --[!glue:start]
+is copied to the template. See chdkptp lua/chdkscripthdr.lua for details
+]]
+--[!glue:start]
+--[[
 chdkptp "glue" script to use fixedint.lua with remoteshoot
 
 This file must be on the host PC running chdkptp, NOT on the camera
@@ -24,7 +29,7 @@ like
 
 ]]
 
---[!glue]
+--[!glue:vars]
 
 -- override shots and interval using remoteshoot opts
 if rs_opts then
@@ -56,4 +61,4 @@ if rs_opts then
 	end
 end
 
---[!gluebody]
+--[!glue:body]

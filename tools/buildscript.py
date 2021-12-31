@@ -67,11 +67,11 @@ def process_file(infile, verbose = 0, lib_path = '.', level = 0, max_level = 10,
         # if inlining, handle start/end tags
         if level > 0:
             # discard everything up to and including inline_start
-            if re.match('\s*--\[!inline_start\]\s*$',line):
+            if re.match('\s*--\[!inline:module_start\]\s*$',line):
                 ostr = ''
                 continue
             # discard everything including and after inline_end
-            if re.match('\s*--\[!inline_end\]\s*$',line):
+            if re.match('\s*--\[!inline:module_end\]\s*$',line):
                 break
         m = re.match('''\s*((local)?\s*([A-Za-z0-9_]+)\s*=\s*)?require\(?['"]([^'"]+)['"]\)?\s*--\[!inline\]''',line)
         if not m:

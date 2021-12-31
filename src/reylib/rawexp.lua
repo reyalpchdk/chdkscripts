@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 with CHDK. If not, see <http://www.gnu.org/licenses/>.
 ]]
 
---[!inline_start]
+--[!inline:module_start]
 -- exposure module. License: GPL
 local stru=require'reylib/strutil' --[!inline]
 local exp={}

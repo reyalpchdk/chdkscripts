@@ -1,4 +1,9 @@
 --[[
+This is a template to generate glue scripts. Everything below --[!glue:start]
+is copied to the template. See chdkptp lua/chdkscripthdr.lua for details
+]]
+--[!glue:start]
+--[[
 chdkptp "glue" script to use rawopint.lua with remoteshoot
 
 This file must be on the host PC running chdkptp, NOT on the camera
@@ -28,7 +33,7 @@ Note:
 rawop histogram and meter may interfere with USB communication if they run too long
 ]]
 
---[!glue]
+--[!glue:vars]
 
 -- if invoked from remoteshoot, override menu options from remoteshoot
 -- options where required or reasonable mappings exist
@@ -61,4 +66,4 @@ if rs_opts then
 	end
 end
 
---[!gluebody]
+--[!glue:body]

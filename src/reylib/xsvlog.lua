@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 with CHDK. If not, see <http://www.gnu.org/licenses/>.
 ]]
 
---[!inline_start]
+--[!inline:module_start]
 -- csv log module. License: GPL
 local csvlog={}
 local log_methods = {}
@@ -310,5 +310,5 @@ function csvlog.new(opts)
 	return t
 end
 return csvlog
---[!inline_end]
+--[!inline:module_end]
 
