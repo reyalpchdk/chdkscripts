@@ -88,7 +88,7 @@ log:log_desc("goodbye")
 ```
 logs the string "hello world / goodbye" to the `desc` column.
 ### Time intervals
-The function `dt_loggers` option can be used to define `log` methods which measure elapsed time in milliseconds within a given log row. `dt_loggers` takes the name of a column to use as the start time (typically, the start of a loop iteration) adds a method which when called, sets a named column to the difference between the current tick time and the start time. With the initialization above, the following
+The `dt_loggers` option can be used to define `log` methods which measure elapsed time in milliseconds within a given log row. `dt_loggers` takes the name of a column to use as the start time (typically, the start of a loop iteration) adds a method which when called, sets a named column to the difference between the current tick time and the start time. With the initialization above, the following
 ```lua
 -- ... main loop
 log:set{start=get_tick_count()} -- set the start column value
