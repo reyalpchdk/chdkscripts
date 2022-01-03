@@ -200,6 +200,39 @@ function log_methods:init(opts)
 		end
 	end
 	self:reset_vals()
+
+	if opts.text_loggers then
+		for n,col in pairs(opts.text_loggers) do
+			if not self.vals[col] then
+				error('invalid text_logger col '..col)
+			end
+			local name = 'log_'..col
+			if self[name] ~= nil then
+				error('conflicting text_logger '..name)
+			end
+			self[name]=function(self,fmt,...)
+				self:set{[col]=string.format(fmt,...)}
+			end
+		end
+	end
+	if opts.dt_loggers then
+		for n,base_col in pairs(opts.dt_loggers) do
+			if not self.vals[base_col] then
+				error('invalid dt_logger base col '..base_col)
+			end
+			local name = 'dt_'..base_col
+			if self[name] ~= nil then
+				error('conflicting dt_logger '..name)
+			end
+			self[name]=function(self,col)
+				if not self.vals[col] then
+					error('invalid dt_logger col name '..tostring(col))
+				end
+				self:set{[col]=tostring(get_tick_count() - self.vals[base_col])}
+			end
+		end
+	end
+
 	-- checks after vals initialized
 	for n, v in pairs(self.funcs) do
 		if not self.vals[n] then
@@ -342,50 +375,6 @@ function log_methods:set(vals)
 		end
 	end
 end
---[[
-return a function that records time offset from col named base_name
-if name is not provided, function expects target aname as arg
-]]
-function log_methods:dt_logger(base_name,name)
-	if not self.vals[base_name] then
-		error('invalid base field name')
-	end
-	if self.dummy then
-		return function() end
-	end
-	if not name then
-		return function(name)
-			if not self.vals[name] then
-				error('invalid col name')
-			end
-			self:set{[name]=tostring(get_tick_count() - self.vals[base_name])}
-		end
-	end
-	if not self.vals[name] then
-		error('invalid col name')
-	end
-	return function()
-		self:set{[name]=tostring(get_tick_count() - self.vals[base_name])}
-	end
-end
-
---[[
-return a printf-like function that appends to table col
-]]
-function log_methods:text_logger(name)
-	if not self.vals[name] then
-		error('invalid col name')
-	end
-	if not self.tables[name] then
-		error('text logger must be table field '..tostring(name))
-	end
-	if self.dummy then
-		return function() end
-	end
-	return function(fmt,...)
-		self:set{[name]=string.format(fmt,...)}
-	end
-end
 
 function log_methods:close()
 	if self.buffer_mode == 'table' then
@@ -472,11 +461,11 @@ function disp:toggle(timeout)
 		timeout = 30000
 	end
 	if self.state then
-		logdesc('disp:toggle off')
+		log:log_desc('disp:toggle off')
 		self.shutoff_time = false
 		self:enable(false)
 	else
-		logdesc('disp:toggle on')
+		log:log_desc('disp:toggle on')
 		self:enable(true,timeout)
 	end
 end
@@ -687,7 +676,7 @@ function clockstart:main_wait()
 		if is_key('menu') then
 			-- prevent shutdown on finish if user abort
 			shutdown.opts.finish = false
-			logdesc('user exit')
+			log:log_desc('user exit')
 			log:write()
 			return false
 		end
@@ -700,7 +689,7 @@ function clockstart:main_wait()
 		end
 		if shutdown:check() then
 			-- low power could apply
-			logdesc('shutdown:%s',shutdown:reason())
+			log:log_desc('shutdown:%s',shutdown:reason())
 			log:write()
 			return false
 		end
@@ -760,10 +749,10 @@ end
 
 function log_preshoot_values()
 	local dof=get_dofinfo()
-	logdesc('sd:%d af_ok:%s fl:%d efl:%d zoom_pos:%d',
+	log:log_desc('sd:%d af_ok:%s fl:%d efl:%d zoom_pos:%d',
 			dof.focus,tostring(get_focus_ok()),dof.focal_length,dof.eff_focal_length,get_zoom())
 	-- these shouldn't change, only log initial values
-	logdesc('sv96:%d tv96:%d av96:%d',get_prop(props.SV), get_prop(props.TV), get_prop(props.AV))
+	log:log_desc('sv96:%d tv96:%d av96:%d',get_prop(props.SV), get_prop(props.TV), get_prop(props.AV))
 end
 
 function run()
@@ -810,12 +799,14 @@ function run()
 		tables={
 			desc=' / ',
 		},
+		text_loggers={
+			'desc',
+		},
 	}
-	logdesc=log:text_logger('desc')
 	-- log message and display on screen, for waiting stage
 	logecho=function(...)
 		stru.printf(...)
-		logdesc(...)
+		log:log_desc(...)
 	end
 
 	shutdown:init{
@@ -826,16 +817,16 @@ function run()
 
 	init_shutter_procs()
 
-	logdesc('fixedint v:%s',fixedint_version)
+	log:log_desc('fixedint v:%s',fixedint_version)
 
 	local bi=get_buildinfo()
-	logdesc("platform:%s-%s-%s-%s %s %s",
+	log:log_desc("platform:%s-%s-%s-%s %s %s",
 						bi.platform,bi.platsub,bi.build_number,bi.build_revision,
 						bi.build_date,bi.build_time)
-	logdesc('interval:%d',interval)
+	log:log_desc('interval:%d',interval)
 
 	if ui_darks then
-		logdesc('taking darks')
+		log:log_desc('taking darks')
 	end
 
 	clockstart:init{
@@ -866,13 +857,13 @@ function run()
 		local zoom_step
 		if ui_zoom_mode_t.value == 'Pct' then
 			if ui_zoom > 100 then
-				logdesc('WARN zoom %d>100%%',ui_zoom)
+				log:log_desc('WARN zoom %d>100%%',ui_zoom)
 				ui_zoom=100
 			end
 			zoom_step = (get_zoom_steps()*ui_zoom)/100
 		else
 			if ui_zoom >= get_zoom_steps() then
-				logdesc('WARN zoom %d>max %d',ui_zoom,get_zoom_steps()-1)
+				log:log_desc('WARN zoom %d>max %d',ui_zoom,get_zoom_steps()-1)
 				zoom_step = get_zoom_steps()-1
 			else
 				zoom_step = ui_zoom
@@ -884,7 +875,7 @@ function run()
 	if ui_sd_mode_t.value ~= 'Off' then
 		focus:init()
 		focus:enable_override(ui_sd_mode_t.value)
-		logdesc('uisd:%d pref:%s mode:%s',ui_sd,ui_sd_mode_t.value,focus:get_mode())
+		log:log_desc('uisd:%d pref:%s mode:%s',ui_sd,ui_sd_mode_t.value,focus:get_mode())
 		focus:set(ui_sd)
 	end
 
@@ -899,12 +890,12 @@ function run()
 			image_size_save = get_prop(props.RESOLUTION)
 			canon_img_fmt_save = get_canon_image_format()
 			set_canon_image_format(canon_img_fmt)
-			logdesc('set canon_img_fmt:%d',canon_img_fmt)
+			log:log_desc('set canon_img_fmt:%d',canon_img_fmt)
 		elseif canon_img_fmt > 1 then
 			error('Firmware does not support Canon RAW')
 		end
 	else
-		logdesc('canon_img_fmt:%d',get_canon_image_format())
+		log:log_desc('canon_img_fmt:%d',get_canon_image_format())
 	end
 
 	if ui_disable_dfs then
@@ -920,7 +911,7 @@ function run()
 
 	local cont = ui_use_cont and get_prop(props.DRIVE_MODE) == 1
 	if cont then
-		logdesc('cont_mode')
+		log:log_desc('cont_mode')
 	end
 	if ui_shots == 0 then
 		ui_shots = 100000000
@@ -930,7 +921,7 @@ function run()
 	disp:update()
 
 	if not clockstart.ts_start then
-		logdesc('start_delay:%d',ui_start_delay)
+		log:log_desc('start_delay:%d',ui_start_delay)
 		sleep(ui_start_delay)
 	end
 
@@ -972,12 +963,12 @@ function run()
 		if is_key('menu') or read_usb_msg() == 'quit' then
 			-- prevent shutdown on finish if user abort
 			shutdown.opts.finish = false
-			logdesc('user exit')
+			log:log_desc('user exit')
 			log:write()
 			break
 		end
 		if shutdown:check() then
-			logdesc('shutdown:%s',shutdown:reason())
+			log:log_desc('shutdown:%s',shutdown:reason())
 			log:write()
 			break
 		end
