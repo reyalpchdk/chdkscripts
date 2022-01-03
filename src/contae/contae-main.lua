@@ -221,7 +221,7 @@ function shootctl:update_drive_mode()
 	end
 end
 function shootctl:burst_start()
-	logdesc('burst start')
+	log:log_desc('burst start')
 
 	exp:init_preshoot()
 	log:write()
@@ -322,9 +322,10 @@ log = xsvlog.new{
 	tables={
 		desc=' / ',
 	},
+	text_loggers={
+		'desc',
+	},
 }
---logtime=log:dt_logger('start')
-logdesc=log:text_logger('desc')
 
 exp:init{
 	meter_width_pct=ui_meter_width_pct,
@@ -411,8 +412,8 @@ kb:init{
 }
 
 local bi=get_buildinfo()
-logdesc("contae v:%s",contae_version);
-logdesc("platform:%s-%s-%s-%s %s %s",
+log:log_desc("contae v:%s",contae_version);
+log:log_desc("platform:%s-%s-%s-%s %s %s",
 					bi.platform,bi.platsub,bi.build_number,bi.build_revision,
 					bi.build_date,bi.build_time)
 

@@ -24,7 +24,8 @@ local exp={}
 
 --[[
 log columns used with log:set
-note logdesc function is also assumed to exist and accept printf text
+note log must also provide a method log_desc, for free-form messages
+typically using the xsvlog text_logger option
 ]]
 exp.log_columns={
 	'meter_time', -- milliseconds spent measuring meter area
@@ -137,7 +138,7 @@ function exp:init(opts)
 			if meter_width_trunc < 4 then
 				error('meter width too small')
 			end
-			logdesc('WARN:meter_width truncated:%d->%d',self.meter_width,meter_width_trunc)
+			log:log_desc('WARN:meter_width truncated:%d->%d',self.meter_width,meter_width_trunc)
 			self.meter_width = meter_width_trunc
 		end
 	end
@@ -155,7 +156,7 @@ function exp:init(opts)
 			if meter_height_trunc < 4 then
 				error('meter height too small')
 			end
-			logdesc('WARN:meter_height truncated:%d->%d',self.meter_height,meter_height_trunc)
+			log:log_desc('WARN:meter_height truncated:%d->%d',self.meter_height,meter_height_trunc)
 			self.meter_height = meter_height_trunc
 		end
 	end
@@ -192,14 +193,14 @@ function exp:init(opts)
 	-- approx total number of pixels read by histo
 	table.insert(logvals,string.format("histo_samples=%d",histo_samples))
 
-	logdesc("init:%s",table.concat(logvals,' '))
+	log:log_desc("init:%s",table.concat(logvals,' '))
 
 	-- warn if < 10 pixels in histogram would trigger threshold
 	if self.over_thresh_frac > 0 and 10*self.histo_scale/self.over_thresh_frac > histo_samples then
-		logdesc('WARN:over_thresh histo_samples')
+		log:log_desc('WARN:over_thresh histo_samples')
 	end
 	if self.under_thresh_frac > 0 and 10*self.histo_scale/self.under_thresh_frac > histo_samples then
-		logdesc('WARN:under_thresh histo_samples')
+		log:log_desc('WARN:under_thresh histo_samples')
 	end
 
 	-- TODO should just auto adjust and warn in log, or use multiple meters
@@ -207,13 +208,13 @@ function exp:init(opts)
 		error("meter step too small")
 	end
 	if self.tv96_sv_thresh < self.tv96_long_limit then
-		logdesc('WARN:tv96_sv_thresh < tv96_long_limit')
+		log:log_desc('WARN:tv96_sv_thresh < tv96_long_limit')
 		self.tv96_sv_thresh = self.tv96_long_limit
 -- TODO could disable instead
 --		self.sv96_max = self.sv96_target
 	end
 	if self.sv96_max < self.sv96_target then
-		logdesc('WARN:sv96_max < sv96_target')
+		log:log_desc('WARN:sv96_max < sv96_target')
 		self.sv96_max = self.sv96_target
 	end
 
@@ -237,7 +238,7 @@ function exp:init_frame()
 	-- highest value to count as under exp, as shot histo value
 	-- = raw(-margin_ev)/(2^(bpp - histo_bpp))
 	self.under_histo_max = bitshru(rawop.ev_to_raw(-self.under_margin_ev),rawop.get_bits_per_pixel() - 10)
-	logdesc('init_frame:black_level=%d neutral=%d over_histo_min=%d under_histo_max=%d',
+	log:log_desc('init_frame:black_level=%d neutral=%d over_histo_min=%d under_histo_max=%d',
 				self.black_level,
 				rawop.get_raw_neutral(),
 				self.over_histo_min,
@@ -428,22 +429,22 @@ function exp:calc_bv_ev_shift()
 	if bv_ev_shift > self.meter_high_thresh then
 		local over = bv_ev_shift - self.meter_high_thresh
 		if over > 2*(self.meter_high_limit - self.meter_high_thresh) then
-			--logdesc('bv ev limit:%d',bv_ev_shift)
+			--log:log_desc('bv ev limit:%d',bv_ev_shift)
 			self:nextlog{bv_ev_l1=bv_ev_shift}
 			bv_ev_shift = self.meter_high_limit
 		else
-			--logdesc('bv ev thresh:%d',bv_ev_shift)
+			--log:log_desc('bv ev thresh:%d',bv_ev_shift)
 			self:nextlog{bv_ev_l1=bv_ev_shift}
 			bv_ev_shift = self.meter_high_thresh + over/2
 		end
 	elseif bv_ev_shift < self.meter_low_thresh then
 		local under = bv_ev_shift - self.meter_low_thresh
 		if under < 2*(self.meter_low_limit - self.meter_low_thresh) then
-			-- logdesc('bv ev -limit:%d',bv_ev_shift)
+			-- log:log_desc('bv ev -limit:%d',bv_ev_shift)
 			self:nextlog{bv_ev_l1=bv_ev_shift}
 			bv_ev_shift = self.meter_low_limit
 		else
-			-- logdesc('bv ev -thresh:%d',bv_ev_shift)
+			-- log:log_desc('bv ev -thresh:%d',bv_ev_shift)
 			self:nextlog{bv_ev_l1=bv_ev_shift}
 			bv_ev_shift = self.meter_low_thresh + under/2
 		end
@@ -469,7 +470,7 @@ function exp:calc_ev_change()
 		self.ev_target_base = self.ev_shift
 		-- if using initial as target, add to ev_shift
 		if self.ev_use_initial then
-			logdesc('initial ev:%d+%d',self.mval96,self.ev_shift)
+			log:log_desc('initial ev:%d+%d',self.mval96,self.ev_shift)
 			self.ev_target_base = self.ev_target_base + self.mval96
 		end
 	end
@@ -562,7 +563,7 @@ function exp:calc_ev_change()
 		local prio_mod = self:clamp(over_fw * self.over_prio / self.over_thresh_weight,0,self.over_prio)
 		-- meter in opposite direction?
 		if ev_change > 0 then
-			logdesc("over prio meter %d-%d",meter_weight,prio_mod)
+			log:log_desc("over prio meter %d-%d",meter_weight,prio_mod)
 			meter_weight = meter_weight - prio_mod
 			if meter_weight < 0 then
 				meter_weight = 0
@@ -570,7 +571,7 @@ function exp:calc_ev_change()
 		end
 		-- under exposure
 		if under_fw then
-			logdesc("over prio under %d-%d",under_weight,prio_mod)
+			log:log_desc("over prio under %d-%d",under_weight,prio_mod)
 			under_weight = under_weight - prio_mod
 			if under_weight < 0 then
 				under_weight = 0
@@ -582,7 +583,7 @@ function exp:calc_ev_change()
 		local prio_mod = self:clamp(under_fw * self.under_prio / self.under_thresh_weight,0,self.under_prio)
 		-- meter in opposite direction?
 		if ev_change < 0 then
-			logdesc("under prio meter %d-%d",meter_weight,prio_mod)
+			log:log_desc("under prio meter %d-%d",meter_weight,prio_mod)
 			meter_weight = meter_weight - prio_mod
 			if meter_weight < 0 then
 				meter_weight = 0
@@ -590,7 +591,7 @@ function exp:calc_ev_change()
 		end
 		-- over exposure
 		if over_fw then
-			logdesc("under prio over %d-%d",over_weight,prio_mod)
+			log:log_desc("under prio over %d-%d",over_weight,prio_mod)
 			over_weight = over_weight - prio_mod
 			if over_weight < 0 then
 				over_weight = 0
@@ -726,9 +727,9 @@ function exp:init_exposure_params_from_cam()
 	-- allow manual fine-tuning
 	if self.nd_value == 0 then
 		self.nd_value = get_nd_value_ev96()
-		logdesc('fw nd_value:%d',self.nd_value)
+		log:log_desc('fw nd_value:%d',self.nd_value)
 	else
-		logdesc('override nd_value:%d fw:%d',self.nd_value,get_nd_value_ev96())
+		log:log_desc('override nd_value:%d fw:%d',self.nd_value,get_nd_value_ev96())
 	end
 	self.nd_state = self:get_nd_state()
 
@@ -765,17 +766,17 @@ function exp:sanity_check_cam_exposure_params()
 	local cam_sv96 = get_prop(props.SV)
 	local cam_av96 = get_prop(props.AV)
 	if self.tv96 ~= cam_tv96 then
-		logdesc('tv %s != cam %s',tostring(self.tv96),tostring(cam_tv96))
+		log:log_desc('tv %s != cam %s',tostring(self.tv96),tostring(cam_tv96))
 	end
 	if self.sv96 ~= cam_sv96 then
-		logdesc('sv %s != cam %s',tostring(self.sv96),tostring(cam_sv96))
+		log:log_desc('sv %s != cam %s',tostring(self.sv96),tostring(cam_sv96))
 	end
 	if self.av96 ~= cam_av96 then
-		logdesc('av %s != cam %s',tostring(self.av96),tostring(cam_av96))
+		log:log_desc('av %s != cam %s',tostring(self.av96),tostring(cam_av96))
 	end
 	local cam_nd = self:get_nd_state()
 	if self.nd_state ~= cam_nd then
-		logdesc('nd %s != cam %s',tostring(self.nd_state),tostring(cam_nd))
+		log:log_desc('nd %s != cam %s',tostring(self.nd_state),tostring(cam_nd))
 	end
 end
 
@@ -815,11 +816,11 @@ function exp:on_hook_shoot_ready()
 		self:set_nd()
 		-- TODO spammy on cams that need it
 		if self.nd_state == self:get_nd_state() then
-			-- logdesc('hook ndfix')
+			-- log:log_desc('hook ndfix')
 			log:set{nd_hookfix=1}
 		else
 			log:set{nd_hookfix=0}
-			-- logdesc('hook ndfix fail')
+			-- log:log_desc('hook ndfix fail')
 		end
 	end
 end
@@ -867,7 +868,7 @@ function exp:calc_exposure_params()
 
 	-- TODO initial may be over limits
 	if self.sv96 > self.sv96_max then
-		logdesc('sv prev > sv max')
+		log:log_desc('sv prev > sv max')
 	end
 	if self.sv96 > sv96_new then
 		sv_extra = self.sv96 - sv96_new
@@ -891,11 +892,11 @@ function exp:calc_exposure_params()
 			nd_state_new = false
 		end
 		if self.tv96_nd_thresh and tv96_new > self.tv96_nd_thresh then
-			-- logdesc('tv over nd:%d',tv96_new - self.tv96_nd_thresh)
+			-- log:log_desc('tv over nd:%d',tv96_new - self.tv96_nd_thresh)
 			self:nextlog{nd_tv_tr=tv96_new - self.tv96_nd_thresh}
 			nd_state_new = true
 		elseif self.tv96_nd_thresh and nd_state_old and tv96_new > self.tv96_nd_thresh - self.nd_hysteresis then
-			-- logdesc('tv nd hyst:%d',tv96_new - self.tv96_nd_thresh)
+			-- log:log_desc('tv nd hyst:%d',tv96_new - self.tv96_nd_thresh)
 			self:nextlog{nd_tv_tr=tv96_new - self.tv96_nd_thresh}
 			nd_state_new = true
 		end
@@ -916,12 +917,12 @@ function exp:calc_exposure_params()
 			if over > (self.tv96_sv_thresh - self.tv96_long_limit)*2 then
 				tv_extra = tv96_new - self.tv96_long_limit
 				tv96_new = self.tv96_long_limit
-				-- logdesc('tv over long:%d',-tv_extra)
+				-- log:log_desc('tv over long:%d',-tv_extra)
 				self:nextlog{tv_l1=tv_extra}
 			else
 				tv_extra = -over/2
 				tv96_new = tv96_new - tv_extra
-				-- logdesc('tv iso adj:%d',-tv_extra)
+				-- log:log_desc('tv iso adj:%d',-tv_extra)
 				self:nextlog{tv_sv_tr=-tv_extra}
 			end
 		end
@@ -931,11 +932,11 @@ function exp:calc_exposure_params()
 		end
 		if sv96_new > self.sv96_max then
 			local sv_over = sv96_new - self.sv96_max
-			-- logdesc('iso over limit:%d',sv_over)
+			-- log:log_desc('iso over limit:%d',sv_over)
 			self:nextlog{sv_l1=sv_over}
 			-- if ISO range isn't past end of shutter range, put remainder back on shutter
 			if tv96_new > self.tv96_long_limit then
-				-- logdesc('iso over tv:%d',tv96_new - self.tv96_long_limit)
+				-- log:log_desc('iso over tv:%d',tv96_new - self.tv96_long_limit)
 				self:nextlog{sv_tv_tr=tv96_new - self.tv96_long_limit}
 				tv96_new = tv96_new - sv_over
 				if tv96_new < self.tv96_long_limit then
@@ -948,14 +949,14 @@ function exp:calc_exposure_params()
 		end
 	else
 		if tv96_new < self.tv96_long_limit then
-			-- logdesc('tv over long:%d',self.tv96_long_limit- tv96_new)
+			-- log:log_desc('tv over long:%d',self.tv96_long_limit- tv96_new)
 			self:nextlog{tv_l1=tv96_new - self.tv96_long_limit}
 			tv96_new = self.tv96_long_limit
 		end
 	end
 
 	if tv96_new > self.tv96_short_limit then
-		-- logdesc('tv under short:%d',tv96_new)
+		-- log:log_desc('tv under short:%d',tv96_new)
 		self:nextlog{tv_l1=tv96_new - self.tv96_short_limit}
 		tv96_new = self.tv96_short_limit
 	end

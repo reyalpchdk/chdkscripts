@@ -21,7 +21,7 @@ log = xsvlog.new{
 -- name is required
 	name="A/myscript.csv",
 -- the following are defaults
---  delim=',',
+--	delim=',',
 --	append=false,
 --	dummy=false,
 --	buffer_mode='os',
@@ -34,6 +34,7 @@ log = xsvlog.new{
 		'exp',
 		'start',
 		'exp_start',
+		'raw_ready',
 		'tsensor',
 		'desc',
 	},
@@ -47,6 +48,14 @@ log = xsvlog.new{
 -- table columns, optional
 	tables={
 		desc=' / ',
+	},
+-- define printf-like methods for specific fields, optional
+	text_loggers={
+		'desc', -- defines log:log_desc(...)
+	},
+-- define methods that measure tick time difference from a specific field, optional
+	dt_loggers={
+		'start', -- defines log:dt_start('col')
 	},
 }
 
@@ -70,7 +79,25 @@ Column names and order are defined using the `cols` option, which must be an arr
 ### Function columns
 Function columns have their values set by a function called automatically when log:write() is called. They are defined in the `funcs` option, which is a table mapping column names to functions. Any columns referenced in `funcs` must also appear in `cols`. If a function requires arguments, it can be wrapped as `tsensor` is in the example above.
 ### Table columns
-Table columns accumulate values each time `log:set` is called, and concatenate them with a separator on `log:write`. This can be used in conjunction with `log:text_logger` to record free-form text messages.
+Table columns accumulate values each time `log:set` is called, and concatenate them with a separator on `log:write`. This can be used in conjunction with `text_loggers` option to record free-form text messages.
+### Free-form text
+It is frequently desirable to record free-form text message for debugging or flagging conditions that don't conveniently map to CSV cells. This is supported using the `text_loggers` which adds methods to the `log` object that accept printf-like arguments and set the result in a column. Methods defined in `text_loggers` are named `log_<column name>` so with the initialization above, the following
+```lua
+log:log_desc("hello %s","world")
+log:log_desc("goodbye")
+```
+logs the string "hello world / goodbye" to the `desc` column.
+### Time intervals
+The function `dt_loggers` option can be used to define `log` methods which measure elapsed time in milliseconds within a given log row. `dt_loggers` takes the name of a column to use as the start time (typically, the start of a loop iteration) adds a method which when called, sets a named column to the difference between the current tick time and the start time. With the initialization above, the following
+```lua
+-- ... main loop
+log:set{start=get_tick_count()} -- set the start column value
+-- ... stuff
+log:dt_start('exp_start') -- log time between start and exposure start
+-- ... code that waits for raw to be available
+log:dt_start('raw_ready') -- log time between start and raw ready
+```
+sets the columns `exp_start` and `raw_ready` to millisecond offsets from the value in `start`.
 ## Setting column values
 Values are normally set using `log:set`, which takes Lua table of column name, value pairs, like
 ```lua
@@ -79,26 +106,6 @@ log:set{
 	tv=get_tv96(),
 	av=get_av96(),
 }
-```
-## Logging free-form text
-It is frequently desirable to record free-form text message for debugging or flagging conditions that don't conveniently map to CSV cells. This is supported using the `log:text_logger` function, which returns a function which appends `string.format` formatted text to a specified table column each time it is called. For example
-```lua
-logdesc=log:text_logger('desc')
-logdesc('started %s',os.date())
-```
-creates the function `logdesc` which logs to the column `desc`, and then writes a message with the current date to it.
-## Logging time intervals
-The function `log:dt_logger` can be used to create functions which measure elapsed time in milliseconds within a given log row. `log:dt_logger` takes the name of a column to use as the start time (typically, the start of a loop iteration) and returns a function which when called, sets a named column to the difference between the current tick time and the start time. For example
-```lua
--- initialization
-logtime=log:dt_logger('start')
--- ... main loop
-log:set{start=get_tick_count()} -- set the start column value
--- ... stuff
-logtime('stage1') -- log time between start and stage one into column stage1
--- ... more stuff
-logtime('stage2') -- log time between start and stage two into column stage2
-
 ```
 ## Other functions
 * `log:close` should be called when the script ends, to ensure the log is fully written to file. No further writes are possible after close is called. To ensure output is written without closing, use `log:flush`.

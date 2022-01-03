@@ -235,13 +235,17 @@ log = xsvlog.new{
 	tables={
 		desc=' / ',
 	},
+	dt_loggers={
+		'start',
+	},
+	text_loggers={
+		'desc',
+	},
 }
-logtime=log:dt_logger('start')
-logdesc=log:text_logger('desc')
 -- log message and display on screen, for waiting stage
 logecho=function(...)
 	stru.printf(...)
-	logdesc(...)
+	log:log_desc(...)
 end
 
 shutdown:init{
@@ -325,17 +329,17 @@ exp:init{
 
 function log_preshoot_values()
 	local dof=get_dofinfo()
-	logdesc('sd:%d af_ok:%s fl:%d efl:%d zoom_pos:%d',
+	log:log_desc('sd:%d af_ok:%s fl:%d efl:%d zoom_pos:%d',
 			dof.focus,tostring(get_focus_ok()),dof.focal_length,dof.eff_focal_length,get_zoom())
 end
 
 function run()
 	local bi=get_buildinfo()
-	logdesc("rawopint v:%s",rawopint_version)
-	logdesc("platform:%s-%s-%s-%s %s %s",
+	log:log_desc("rawopint v:%s",rawopint_version)
+	log:log_desc("platform:%s-%s-%s-%s %s %s",
 						bi.platform,bi.platsub,bi.build_number,bi.build_revision,
 						bi.build_date,bi.build_time)
-	logdesc('interval:%d',interval)
+	log:log_desc('interval:%d',interval)
 
 	clockstart:init{
 		active=(ui_start_hour >= 0),
@@ -360,15 +364,15 @@ function run()
 	if vid then
 		error('not in still mode')
 	end
-	logdesc('capmode:%s',capmode.get_name())
+	log:log_desc('capmode:%s',capmode.get_name())
 
 	if ui_raw_hook_sleep > 0 then
-		logdesc('rawhooksleep:%d',ui_raw_hook_sleep)
+		log:log_desc('rawhooksleep:%d',ui_raw_hook_sleep)
 	end
 
 	local yield_save_count, yield_save_ms
 	if ui_noyield then
-		logdesc('noyield')
+		log:log_desc('noyield')
 		yield_save_count, yield_save_ms = set_yield(-1,-1)
 	end
 	if image_size then
@@ -385,34 +389,34 @@ function run()
 		if get_canon_raw_support() then
 			canon_img_fmt_save = get_canon_image_format()
 			set_canon_image_format(canon_img_fmt)
-			logdesc('set canon_img_fmt:%d',canon_img_fmt)
+			log:log_desc('set canon_img_fmt:%d',canon_img_fmt)
 		elseif canon_img_fmt > 1 then
 			error('Firmware does not support Canon RAW')
 		end
 	else
-		logdesc('canon_img_fmt:%d',get_canon_image_format())
+		log:log_desc('canon_img_fmt:%d',get_canon_image_format())
 	end
 
 	local cont = ui_use_cont and get_prop(props.DRIVE_MODE) == 1
 	if cont then
-		logdesc('cont_mode')
+		log:log_desc('cont_mode')
 	end
 
 	if rs_opts then
-		logdesc('remoteshoot')
+		log:log_desc('remoteshoot')
 	end
 
 	if ui_zoom_mode_t.value ~= 'Off' then
 		local zoom_step
 		if ui_zoom_mode_t.value == 'Pct' then
 			if ui_zoom > 100 then
-				logdesc('WARN zoom %d>100%%',ui_zoom)
+				log:log_desc('WARN zoom %d>100%%',ui_zoom)
 				ui_zoom=100
 			end
 			zoom_step = (get_zoom_steps()*ui_zoom)/100
 		else
 			if ui_zoom >= get_zoom_steps() then
-				logdesc('WARN zoom %d>max %d',ui_zoom,get_zoom_steps()-1)
+				log:log_desc('WARN zoom %d>max %d',ui_zoom,get_zoom_steps()-1)
 				zoom_step = get_zoom_steps()-1
 			else
 				zoom_step = ui_zoom
@@ -425,7 +429,7 @@ function run()
 	if ui_sd_mode_t.value ~= 'Off' then
 		focus:init()
 		focus:enable_override(ui_sd_mode_t.value)
-		logdesc('uisd:%d pref:%s mode:%s',ui_sd,ui_sd_mode_t.value,focus:get_mode())
+		log:log_desc('uisd:%d pref:%s mode:%s',ui_sd,ui_sd_mode_t.value,focus:get_mode())
 		focus:set(ui_sd)
 	end
 
@@ -437,7 +441,7 @@ function run()
 	hook_shoot.set(2000+interval)
 	-- if using remote, make sure shoot hook will wait longer than timeout interval
 	if ui_use_remote then
-		logdesc("USB remote")
+		log:log_desc("USB remote")
 		usb_remote_enable_save = get_config_value(require'GEN/cnf_core'.remote_enable)
 		set_config_value(require'GEN/cnf_core'.remote_enable,1)
 		-- TODO set remote config values as needed
@@ -493,17 +497,17 @@ function run()
 		if user_exit then
 			-- prevent shutdown on finish if user abort
 			shutdown.opts.finish = false
-			logdesc('user exit')
+			log:log_desc('user exit')
 			log:write()
 			break
 		end
 		-- TODO CHDK osd doesn't seem to update in halfshoot, but you can check exposure
 		if is_key('set') then
-			logdesc('key_set')
+			log:log_desc('key_set')
 			disp:toggle(30000)
 		end
 		if shutdown:check() then
-			logdesc('shutdown:%s',shutdown:reason())
+			log:log_desc('shutdown:%s',shutdown:reason())
 			log:write()
 			break
 		end
@@ -513,7 +517,7 @@ function run()
 		end
 		-- wait until the hook is reached
 		hook_shoot.wait_ready()
-		logtime('shoot_ready')
+		log:dt_start('shoot_ready')
 		if not cont then
 			release('shoot_full_only')
 		end
@@ -535,12 +539,12 @@ function run()
 				-- normal exit hard to hit, because remote pulse counts as key
 				wait_click(10)
 				if is_key('menu') then
-					logdesc('remote quit')
+					log:log_desc('remote quit')
 					user_exit=true
 					break
 				end
 				if get_tick_count() > timeout then
-					logdesc('remote timeout')
+					log:log_desc('remote timeout')
 					break
 				end
 			end
@@ -565,7 +569,7 @@ function run()
 		end
 		-- record time
 		shot_tick = get_tick_count()
-		logtime('exp_start') -- the moment the exposure started, because hey, why not?
+		log:dt_start('exp_start') -- the moment the exposure started, because hey, why not?
 		-- allow shooting to proceed
 		hook_shoot.continue()
 
@@ -573,7 +577,7 @@ function run()
 
 		-- wait for the image to be captured
 		hook_raw.wait_ready()
-		logtime('raw_ready')
+		log:dt_start('raw_ready')
 
 		-- if warning LED specified, make sure it's turned off here
 		if ui_interval_warn_led then
@@ -586,7 +590,7 @@ function run()
 			sleep(ui_raw_hook_sleep)
 		end
 		hook_raw.continue()
-		logtime('raw_done')
+		log:dt_start('raw_done')
 		log:write()
 		-- if run through remoteshoot, honor the filedummy option to create dummy jpeg/cr2 files
 		if rs_opts and rs_opts.filedummy then

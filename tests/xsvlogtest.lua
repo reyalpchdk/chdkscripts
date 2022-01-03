@@ -176,15 +176,13 @@ log=xsvlog.new{
 	cols={
 		'test'
 	},
+	text_loggers={
+		'desc'
+	}
 }
-logdesc=log:text_logger('desc')
 ]])
-			end,{etype='exec_runtime',msg_match='invalid col name'})
-		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
-		testlib.assert_eq(s,[[
-test
-]])
+			end,{etype='exec_runtime',msg_match='invalid text_logger col desc'})
+		testlib.assert_eq(con:stat('A/logtest.csv'),nil)
 	end,
 	setup=testlib.setup_ensure_connected,
 	cleanup=cleanup_remove_both_csv,
@@ -197,17 +195,16 @@ test
 log=xsvlog.new{
 	name='A/logtest.csv',
 	cols={
-		'test'
+		'desc'
 	},
+	text_loggers={
+		'desc',
+		'desc'
+	}
 }
-logdesc=log:text_logger('test')
 ]])
-			end,{etype='exec_runtime',msg_match='text logger must be table field test'})
-		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
-		testlib.assert_eq(s,[[
-test
-]])
+			end,{etype='exec_runtime',msg_match='conflicting text_logger log_desc'})
+		testlib.assert_eq(con:stat('A/logtest.csv'),nil)
 	end,
 	setup=testlib.setup_ensure_connected,
 	cleanup=cleanup_remove_both_csv,
@@ -432,11 +429,13 @@ log=xsvlog.new{
 		't1',
 		't2',
 	},
+	dt_loggers={
+		'start',
+	},
 }
-logtime=log:dt_logger('start')
 log:set{start=get_tick_count()}
-logtime('t1')
-logtime('t2')
+log:dt_start('t1')
+log:dt_start('t2')
 log:write()
 log:close()
 ]])
@@ -445,6 +444,88 @@ log:close()
 		testlib.assert_eq(s,[[
 start,t1,t2
 1010,10,20
+]])
+	end,
+	setup=testlib.setup_ensure_connected,
+	cleanup=cleanup_remove_both_csv,
+},
+{
+	'bad_dtlogger1',
+	function()
+		testlib.assert_thrown(function()
+				con:execwait(cam_script_mini..[[
+log=xsvlog.new{
+	name='A/logtest.csv',
+	cols={
+		'start',
+		't1',
+		't2',
+	},
+	dt_loggers={
+		'startle',
+	},
+}
+]])
+			end,{etype='exec_runtime',msg_match='invalid dt_logger base col startle'})
+	end,
+	setup=testlib.setup_ensure_connected,
+},
+{
+	'bad_dtlogger2',
+	function()
+		testlib.assert_thrown(function()
+				con:execwait(cam_script_mini..[[
+log=xsvlog.new{
+	name='A/logtest.csv',
+	cols={
+		'start',
+		't1',
+		't2',
+	},
+	dt_loggers={
+		'start',
+		'start',
+	},
+}
+]])
+			end,{etype='exec_runtime',msg_match='conflicting dt_logger dt_start'})
+	end,
+	setup=testlib.setup_ensure_connected,
+},
+{
+	'bad_dtlogger3',
+	function()
+		testlib.assert_thrown(function()
+				con:execwait(cam_script_mini..[[
+-- override get_tick_count so values are predictable
+local fake_tick = 1000
+function get_tick_count()
+	fake_tick = fake_tick + 10
+	return fake_tick
+end
+
+log=xsvlog.new{
+	name='A/logtest.csv',
+	cols={
+		'start',
+		't1',
+		't2',
+	},
+	dt_loggers={
+		'start',
+	},
+}
+log:set{start=get_tick_count()}
+log:dt_start('bad')
+log:dt_start('t2')
+log:write()
+log:close()
+]])
+			end,{etype='exec_runtime',msg_match='invalid dt_logger col name bad'})
+		testlib.assert_cli_ok('d logtest.csv')
+		local s=fsutil.readfile_e('logtest.csv')
+		testlib.assert_eq(s,[[
+start,t1,t2
 ]])
 	end,
 	setup=testlib.setup_ensure_connected,

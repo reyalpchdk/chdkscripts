@@ -46,14 +46,16 @@ log = xsvlog.new{
 	tables={
 		desc=' / ',
 	},
+	text_loggers={
+		'desc',
+	}
 }
-local logdesc=log:text_logger('desc')
 local bi=get_buildinfo()
-logdesc("this is the first data row")
+log:log_desc("this is the first data row")
 log:write()
 log:set{test_1=1,test_2='two'}
-logdesc("this is the second data row, it has a comma")
-logdesc("and a second item")
+log:log_desc("this is the second data row, it has a comma")
+log:log_desc("and a second item")
 log:write()
 log:set{test_1='hello, world',test_2='goodbye "world"'}
 log:write()

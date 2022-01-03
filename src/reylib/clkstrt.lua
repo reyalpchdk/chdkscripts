@@ -69,7 +69,7 @@ function clockstart:main_wait()
 		if is_key('menu') then
 			-- prevent shutdown on finish if user abort
 			shutdown.opts.finish = false
-			logdesc('user exit')
+			log:log_desc('user exit')
 			log:write()
 			return false
 		end
@@ -82,7 +82,7 @@ function clockstart:main_wait()
 		end
 		if shutdown:check() then
 			-- low power could apply
-			logdesc('shutdown:%s',shutdown:reason())
+			log:log_desc('shutdown:%s',shutdown:reason())
 			log:write()
 			return false
 		end

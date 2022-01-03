@@ -105,6 +105,39 @@ function log_methods:init(opts)
 		end
 	end
 	self:reset_vals()
+
+	if opts.text_loggers then
+		for n,col in pairs(opts.text_loggers) do
+			if not self.vals[col] then
+				error('invalid text_logger col '..col)
+			end
+			local name = 'log_'..col
+			if self[name] ~= nil then
+				error('conflicting text_logger '..name)
+			end
+			self[name]=function(self,fmt,...)
+				self:set{[col]=string.format(fmt,...)}
+			end
+		end
+	end
+	if opts.dt_loggers then
+		for n,base_col in pairs(opts.dt_loggers) do
+			if not self.vals[base_col] then
+				error('invalid dt_logger base col '..base_col)
+			end
+			local name = 'dt_'..base_col
+			if self[name] ~= nil then
+				error('conflicting dt_logger '..name)
+			end
+			self[name]=function(self,col)
+				if not self.vals[col] then
+					error('invalid dt_logger col name '..tostring(col))
+				end
+				self:set{[col]=tostring(get_tick_count() - self.vals[base_col])}
+			end
+		end
+	end
+
 	-- checks after vals initialized
 	for n, v in pairs(self.funcs) do
 		if not self.vals[n] then
@@ -245,50 +278,6 @@ function log_methods:set(vals)
 		else
 			self.vals[name] = tostring(v)
 		end
-	end
-end
---[[
-return a function that records time offset from col named base_name
-if name is not provided, function expects target aname as arg
-]]
-function log_methods:dt_logger(base_name,name)
-	if not self.vals[base_name] then
-		error('invalid base field name')
-	end
-	if self.dummy then
-		return function() end
-	end
-	if not name then
-		return function(name)
-			if not self.vals[name] then
-				error('invalid col name')
-			end
-			self:set{[name]=tostring(get_tick_count() - self.vals[base_name])}
-		end
-	end
-	if not self.vals[name] then
-		error('invalid col name')
-	end
-	return function()
-		self:set{[name]=tostring(get_tick_count() - self.vals[base_name])}
-	end
-end
-
---[[
-return a printf-like function that appends to table col
-]]
-function log_methods:text_logger(name)
-	if not self.vals[name] then
-		error('invalid col name')
-	end
-	if not self.tables[name] then
-		error('text logger must be table field '..tostring(name))
-	end
-	if self.dummy then
-		return function() end
-	end
-	return function(fmt,...)
-		self:set{[name]=string.format(fmt,...)}
 	end
 end
 

@@ -80,11 +80,11 @@ function disp:toggle(timeout)
 		timeout = 30000
 	end
 	if self.state then
-		logdesc('disp:toggle off')
+		log:log_desc('disp:toggle off')
 		self.shutoff_time = false
 		self:enable(false)
 	else
-		logdesc('disp:toggle on')
+		log:log_desc('disp:toggle on')
 		self:enable(true,timeout)
 	end
 end
