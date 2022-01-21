@@ -15,7 +15,7 @@ endif
 INLINE_CMD=$(TOPDIR)/tools/buildscript.py $< $@ -l $(SRCDIR) $(INLINE_OPTS)
 endif
 
-GLUE_CMD=$(CHDKPTP) -e'exec require"chdkscripthdr".new_header{file="$<"}:make_glue_file("$(GLUETPLFILE)","$@",{camfile="$(SCRIPTNAME).lua"})'
+GLUE_CMD=$(CHDKPTP) -e'camscript -tpl=$(GLUETPLFILE) -remote=$(SCRIPTNAME).lua -save=$@ $<'
 
 OUTFILE=$(BUILTDIR)/$(SCRIPTNAME).lua
 LIBFILES=$(foreach lib,$(LIBS),$(LIBDIR)/$(lib).lua)
