@@ -339,7 +339,7 @@ function run()
 	log:log_desc("platform:%s-%s-%s-%s %s %s",
 						bi.platform,bi.platsub,bi.build_number,bi.build_revision,
 						bi.build_date,bi.build_time)
-	log:log_desc('interval:%d',interval)
+	log:log_desc('interval:%d shots:%d',interval,ui_shots)
 
 	clockstart:init{
 		active=(ui_start_hour >= 0),
@@ -491,7 +491,11 @@ function run()
 		-- poll / reset click state
 		-- camera will generally take while to be ready for next shot, so extra wait here shouldn't hurt
 		wait_click(10)
-		if is_key('menu') or read_usb_msg() == 'quit' then
+		if is_key('menu') then
+			user_exit=true
+		end
+		if read_usb_msg() == 'quit' then
+			log:log_desc('ptp quit')
 			user_exit=true
 		end
 		if user_exit then
