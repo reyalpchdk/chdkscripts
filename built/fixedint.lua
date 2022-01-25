@@ -823,7 +823,7 @@ function run()
 	log:log_desc("platform:%s-%s-%s-%s %s %s",
 						bi.platform,bi.platsub,bi.build_number,bi.build_revision,
 						bi.build_date,bi.build_time)
-	log:log_desc('interval:%d',interval)
+	log:log_desc('interval:%d shots:%d',interval,ui_shots)
 
 	if ui_darks then
 		log:log_desc('taking darks')
@@ -949,6 +949,7 @@ function run()
 	if cont then
 		press'shoot_full_only'
 	end
+	local user_exit
 	for shot=1,ui_shots do
 		print("shot ",shot,"/",ui_shots)
 		log:set{
@@ -960,7 +961,14 @@ function run()
 		-- poll / reset click state
 		-- camera will generally take while to be ready for next shot, so extra wait here shouldn't hurt
 		wait_click(10)
-		if is_key('menu') or read_usb_msg() == 'quit' then
+		if is_key('menu') then
+			user_exit = true
+		end
+		if read_usb_msg() == 'quit' then
+			log:log_desc('ptp quit')
+			user_exit = true
+		end
+		if user_exit then
 			-- prevent shutdown on finish if user abort
 			shutdown.opts.finish = false
 			log:log_desc('user exit')
