@@ -1,0 +1,8 @@
+# rawopint quick test
+# run with chdkptp -e'source rawopint.chdkptp'
+connect
+rec
+rs -jpg -filedummy -camscript=../built/rawopint.lua -tpl=../src/rawopint/rawopint_chdkptp_tpl.lua -cont=5 -int=2 -menuopts=ui_image_size_e=1 out/${name}
+play
+d rawopint.csv out
+rm rawopint.csv

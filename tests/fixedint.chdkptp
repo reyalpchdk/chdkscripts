@@ -1,0 +1,8 @@
+# fixedint quick test
+# run with chdkptp -e'source fixedint.chdkptp'
+connect
+rec
+rs -jpg -filedummy -camscript=../built/fixedint.lua -tpl=../src/fixedint/fixedint_chdkptp_tpl.lua -cont=5 -int=2 -menuopts=ui_tv_e=15 out/${name}
+play
+d fixedint.csv out
+rm fixedint.csv

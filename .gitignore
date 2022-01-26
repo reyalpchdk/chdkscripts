@@ -1,6 +1,9 @@
 # directory for staging and zips
 /dist
+# local build configuration
 config.mk
+# test output
+/tests/out
 
 # python stuff
 # Byte-compiled / optimized / DLL files
