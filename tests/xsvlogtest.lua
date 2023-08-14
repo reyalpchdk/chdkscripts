@@ -23,7 +23,7 @@ or a single test like
 local inlinemods = require'extras/inlinemods'
 local testlib = require'testlib'
 local cam_script_name = 'xsvlogtest-cam.lua'
-local cam_script = inlinemods.process_string(fsutil.readfile_e(cam_script_name),{
+local cam_script = inlinemods.process_string(fsutil.readfile(cam_script_name),{
 						modpath='../src',
 						source_name=cam_script_name
 					})
@@ -158,7 +158,7 @@ log:set{foo='foo'}
 ]])
 			end,{etype='exec_runtime',msg_match='unknown log col foo'})
 		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
+		local s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 test
 ]])
@@ -243,7 +243,7 @@ opt_name='A/logtest.csv'
 opt_append=false
 ]]..cam_script)
 		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
+		local s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 func1,test_1,test_2,desc
 1,,,this is the first data row
@@ -265,7 +265,7 @@ opt_append=false
 opt_quote_mode='always'
 ]]..cam_script)
 		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
+		local s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 "func1","test_1","test_2","desc"
 "1","","","this is the first data row"
@@ -287,7 +287,7 @@ opt_append=false
 opt_quote_mode='never'
 ]]..cam_script)
 		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
+		local s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 func1,test_1,test_2,desc
 1,,,this is the first data row
@@ -309,7 +309,7 @@ opt_append=false
 opt_delim='\t'
 ]]..cam_script)
 		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
+		local s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,
 'func1\ttest_1\ttest_2\tdesc\n'..
 '1\t\t\tthis is the first data row\n'..
@@ -338,7 +338,7 @@ log:write()
 log:close()
 ]])
 		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
+		local s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 col1,col2
 one,2
@@ -357,7 +357,7 @@ log:write()
 log:close()
 ]])
 		testlib.assert_cli_ok('d logtest.csv')
-		s=fsutil.readfile_e('logtest.csv')
+		s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 col1,col2
 one,2
@@ -384,7 +384,7 @@ log:write()
 log:close()
 ]])
 		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
+		local s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 col1,col2
 one,two
@@ -402,7 +402,7 @@ log:write()
 log:close()
 ]])
 		testlib.assert_cli_ok('d logtest.csv')
-		s=fsutil.readfile_e('logtest.csv')
+		s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 col1,col2
 three,four
@@ -440,7 +440,7 @@ log:write()
 log:close()
 ]])
 		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
+		local s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 start,t1,t2
 1010,10,20
@@ -523,7 +523,7 @@ log:close()
 ]])
 			end,{etype='exec_runtime',msg_match='invalid dt_logger col name bad'})
 		testlib.assert_cli_ok('d logtest.csv')
-		local s=fsutil.readfile_e('logtest.csv')
+		local s=fsutil.readfile('logtest.csv')
 		testlib.assert_eq(s,[[
 start,t1,t2
 ]])
