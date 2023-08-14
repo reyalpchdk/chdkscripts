@@ -103,7 +103,8 @@ clockstart = require'reylib/clkstrt' --[!inline]
 
 exp = require'reylib/rawexp' --[!inline]
 
-function restore()
+-- function to cleanup on restore or normal completion
+function cleanup()
 	disp:enable(true)
 	-- note for some cameras, canon raw is in RESOLUTION prop
 	-- restore raw and size settings in reverse order of set to restore initial value
@@ -119,7 +120,18 @@ function restore()
 	if usb_remote_enable_save then
 		set_config_value(require'GEN/cnf_core'.remote_enable,usb_remote_enable_save)
 	end
-	log:close()
+	if log then
+		log:close()
+	end
+end
+
+function restore()
+	-- record that script was interrupted
+	if log then
+		log:log_desc('interrupted')
+		log:write()
+	end
+	cleanup()
 end
 
 -- main script initialization
@@ -617,7 +629,7 @@ function run()
 	repeat sleep(10) until not get_shooting()
 	sleep(1000)
 
-	restore()
+	cleanup()
 	shutdown:finish()
 end
 

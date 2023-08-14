@@ -115,7 +115,7 @@ function init_shutter_procs()
 	end
 end
 
-function restore()
+function cleanup()
 	-- note for some cameras, canon raw is in RESOLUTION prop
 	-- restore raw and size settings in reverse order of set to restore initial value
 	if canon_img_fmt_save then
@@ -128,7 +128,18 @@ function restore()
 	set_raw_nr(save_nr)
 	set_raw(save_raw)
 	disp:enable(true)
-	log:close()
+	if log then
+		log:close()
+	end
+end
+
+function restore()
+	-- record that script was interrupted
+	if log then
+		log:log_desc('interrupted')
+		log:write()
+	end
+	cleanup()
 end
 
 function log_preshoot_values()
@@ -422,5 +433,5 @@ function run()
 end
 
 run()
-restore()
+cleanup()
 shutdown:finish()

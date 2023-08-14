@@ -268,7 +268,9 @@ end
 -- end shoot control
 
 function restore()
-	log:close()
+	if log then
+		log:close()
+	end
 end
 
 -- main script initialization
