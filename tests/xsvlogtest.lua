@@ -1,5 +1,5 @@
 --[[
-  Copyright (C) 2021 <reyalp (at) gmail dot com>
+  Copyright (C) 2021 - 2024 <reyalp (at) gmail dot com>
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License version 2 as
   published by the Free Software Foundation.
@@ -531,6 +531,525 @@ start,t1,t2
 	setup=testlib.setup_ensure_connected,
 	cleanup=cleanup_remove_both_csv,
 },
+{
+	'ptplog', {
+	{
+		'nofile',
+		function()
+			local msgs={}
+			local handle_msg=chdku.msg_handler_value(msgs,{unserialize=true})
+			con:execwait(cam_script_mini..[[
+log=xsvlog.new{
+	name='A/logtest.csv',
+	nofile=true,
+	ptplog=true,
+	cols={
+		'col1',
+		'col2',
+	},
+}
+log:set{col1='one',col2='two'}
+log:write()
+log:close()
+]],{libs='serialize_msgs',msgs=handle_msg})
+			testlib.assert_eq(con:stat('A/logtest.csv'),nil)
+			testlib.assert_teq(msgs,{
+				{xsvlog={'col1','col2'}},
+				{xsvlog={'one','two'}}
+			})
+		end,
+		setup=function(self,opts)
+			self:ensure_connected(opts)
+			if con:stat('A/logtest.csv') then
+				if not cli:print_status(cli:execute('rm logtest.csv')) then
+					return false
+				end
+			end
+		end,
+	},
+	{
+		'file',
+		function()
+			local msgs={}
+			local handle_msg=chdku.msg_handler_value(msgs,{unserialize=true})
+			con:execwait(cam_script_mini..[[
+log=xsvlog.new{
+	name='A/logtest.csv',
+	ptplog='string',
+	ptplog_key='boo',
+	cols={
+		'col1',
+		'col2',
+	},
+}
+log:set{col1='one',col2='two, and more'}
+log:write()
+log:close()
+]],{libs='serialize_msgs',msgs=handle_msg})
+			testlib.assert_cli_ok('d logtest.csv')
+			testlib.assert_eq(fsutil.readfile('logtest.csv'),[[
+col1,col2
+one,"two, and more"
+]])
+
+			testlib.assert_teq(msgs,{
+				{boo='col1,col2'},
+				{boo='one,"two, and more"'}
+			})
+		end,
+		setup=testlib.setup_ensure_connected,
+		cleanup=cleanup_remove_both_csv,
+	},
+	{
+		'nokey_str',
+		function()
+			local msgs={}
+			local handle_msg=chdku.msg_handler_value(msgs,{unserialize=true})
+			con:execwait(cam_script_mini..[[
+log=xsvlog.new{
+	name='A/logtest.csv',
+	nofile=true,
+	ptplog='string',
+	ptplog_key=false,
+	cols={
+		'col1',
+		'col2',
+	},
+}
+log:set{col1='one',col2='two, and more'}
+log:write()
+log:close()
+]],{libs='serialize_msgs',msgs=handle_msg})
+			testlib.assert_teq(msgs,{
+				'col1,col2',
+				'one,"two, and more"',
+			})
+		end,
+		setup=testlib.setup_ensure_connected,
+	},
+	{
+		'nokey_table',
+		function()
+			local msgs={}
+			local handle_msg=chdku.msg_handler_value(msgs,{unserialize=true})
+			con:execwait(cam_script_mini..[[
+log=xsvlog.new{
+	nofile=true,
+	ptplog='table',
+	ptplog_key=false,
+	cols={
+		'col1',
+		'col2',
+	},
+}
+log:set{col1='one',col2='two, and more'}
+log:write()
+log:close()
+]],{libs='serialize_msgs',msgs=handle_msg})
+			testlib.assert_teq(msgs,{
+				{'col1','col2'},
+				{'one','"two, and more"'},
+			})
+		end,
+		setup=testlib.setup_ensure_connected,
+	},
+	{
+		'timeout1', -- check default timeout behavior
+		function(self)
+			local msgs={}
+			local handle_msg=chdku.msg_handler_value(msgs,{unserialize=true})
+			con:exec(([[
+%s
+print_screen(%d)
+log=xsvlog.new{
+	name='A/logtest.csv',
+	ptplog='table',
+	ptplog_key=false,
+	cols={
+		'it',
+	},
+}
+for i=1,17 do
+	log:set{it=i}
+	log:write()
+end
+log:close()
+]]):format(cam_script_mini,self._data.prnlog_num),{libs='serialize_msgs'})
+			con:wait_status{run=false}
+			con:read_all_msgs{user=handle_msg}
+			testlib.assert_teq(msgs,{
+				{'it'},
+				{'1'},
+				{'2'},
+				{'3'},
+				{'4'},
+				{'5'},
+				{'6'},
+				{'7'},
+				{'8'},
+				{'9'},
+				{'10'},
+				{'11'},
+				{'12'},
+				{'13'},
+				{'14'},
+			})
+			testlib.assert_eq(con:readfile(self._data.prnlog),[[
+msg queue full 15
+msg timeout 15
+]])
+			testlib.assert_eq(con:readfile('A/logtest.csv'),[[
+it
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+]])
+
+		end,
+		setup=function(self,opts)
+			self:ensure_connected(opts)
+			self._data.prnlog_num = con:execwait([[
+local st = os.stat('A/CHDK/LOGS')
+if not st then
+	error('missing A/CHDK/LOGS')
+end
+if not st.is_dir then
+	error('A/CHDK/LOGS not a directory')
+end
+for i=1230, 1250 do
+	local fn=('A/CHDK/LOGS/LOG_%4d.TXT'):format(i)
+	if not os.stat(fn) then
+		return i
+	end
+end
+error('failed to find unused print log name')
+]])
+			self._data.prnlog = ('A/CHDK/LOGS/LOG_%04d.txt'):format(self._data.prnlog_num)
+		end,
+		cleanup={
+			function(self)
+				if self._data.prnlog then
+					cli:print_status(cli:execute(('rm %s'):format(self._data.prnlog)))
+				end
+			end,
+			function(self)
+				if con:is_connected() and con:stat('A/logtest.csv') then
+					cli:print_status(cli:execute('rm logtest.csv'))
+				end
+			end,
+		},
+		_data = {
+		},
+	},
+	{
+		'timeout2', -- check handling if messages read after timeout
+		function(self)
+			local msgs={}
+			local handle_msg=chdku.msg_handler_value(msgs,{unserialize=true})
+			con:exec(([[
+%s
+print_screen(%d)
+log=xsvlog.new{
+	nofile=true,
+	ptplog='table',
+	ptplog_key=false,
+	ptplog_timeout=500,
+	cols={
+		'it',
+	},
+}
+for i=1,17 do
+	log:set{it=i}
+	log:write()
+end
+log:close()
+]]):format(cam_script_mini,self._data.prnlog_num),{libs='serialize_msgs'})
+			-- wait for queue to fill up
+			chdku.sleep(200)
+			-- read two messages, should get queue full but not timeout
+			handle_msg(con:read_msg())
+			handle_msg(con:read_msg())
+			-- wait for script to finish, final message should get new queue full and timeout
+			con:wait_status{run=false}
+			con:read_all_msgs{user=handle_msg}
+			testlib.assert_teq(msgs,{
+				{'it'},
+				{'1'},
+				{'2'},
+				{'3'},
+				{'4'},
+				{'5'},
+				{'6'},
+				{'7'},
+				{'8'},
+				{'9'},
+				{'10'},
+				{'11'},
+				{'12'},
+				{'13'},
+				{'14'},
+				{'15'},
+				{'16'},
+			})
+			testlib.assert_eq(con:readfile(self._data.prnlog),[[
+msg queue full 15
+msg queue full 17
+msg timeout 17
+]])
+		end,
+		setup=function(self,opts)
+			self:ensure_connected(opts)
+			self._data.prnlog_num = con:execwait([[
+local st = os.stat('A/CHDK/LOGS')
+if not st then
+	error('missing A/CHDK/LOGS')
+end
+if not st.is_dir then
+	error('A/CHDK/LOGS not a directory')
+end
+for i=1230, 1250 do
+	local fn=('A/CHDK/LOGS/LOG_%4d.TXT'):format(i)
+	if not os.stat(fn) then
+		return i
+	end
+end
+error('failed to find unused print log name')
+]])
+			self._data.prnlog = ('A/CHDK/LOGS/LOG_%04d.txt'):format(self._data.prnlog_num)
+		end,
+		cleanup={
+			function(self)
+				if self._data.prnlog then
+					cli:print_status(cli:execute(('rm %s'):format(self._data.prnlog)))
+				end
+			end,
+		},
+		_data = {
+		},
+	},
+	{
+		'timeout3', -- check drop_on_timeout disabled
+		function(self)
+			local msgs={}
+			local handle_msg=chdku.msg_handler_value(msgs,{unserialize=true})
+			con:exec(([[
+%s
+print_screen(%d)
+log=xsvlog.new{
+	nofile=true,
+	ptplog='table',
+	ptplog_key=false,
+	ptplog_timeout=100,
+	ptplog_drop_on_timeout=false,
+	cols={
+		'it',
+	},
+}
+for i=1,17 do
+	log:set{it=i}
+	log:write()
+end
+log:close()
+]]):format(cam_script_mini,self._data.prnlog_num),{libs='serialize_msgs'})
+			con:wait_status{run=false}
+			con:read_all_msgs{user=handle_msg}
+			testlib.assert_teq(msgs,{
+				{'it'},
+				{'1'},
+				{'2'},
+				{'3'},
+				{'4'},
+				{'5'},
+				{'6'},
+				{'7'},
+				{'8'},
+				{'9'},
+				{'10'},
+				{'11'},
+				{'12'},
+				{'13'},
+				{'14'},
+			})
+			testlib.assert_eq(con:readfile(self._data.prnlog),[[
+msg queue full 15
+msg timeout 15
+msg timeout 16
+msg timeout 17
+]])
+		end,
+		setup=function(self,opts)
+			self:ensure_connected(opts)
+			self._data.prnlog_num = con:execwait([[
+local st = os.stat('A/CHDK/LOGS')
+if not st then
+	error('missing A/CHDK/LOGS')
+end
+if not st.is_dir then
+	error('A/CHDK/LOGS not a directory')
+end
+for i=1230, 1250 do
+	local fn=('A/CHDK/LOGS/LOG_%4d.TXT'):format(i)
+	if not os.stat(fn) then
+		return i
+	end
+end
+error('failed to find unused print log name')
+]])
+			self._data.prnlog = ('A/CHDK/LOGS/LOG_%04d.txt'):format(self._data.prnlog_num)
+		end,
+		cleanup={
+			function(self)
+				if self._data.prnlog then
+					cli:print_status(cli:execute(('rm %s'):format(self._data.prnlog)))
+				end
+			end,
+		},
+		_data = {
+		},
+	},
+	{
+		'timeout4', -- check warn_print can be turned off
+		function(self)
+			local msgs={}
+			local handle_msg=chdku.msg_handler_value(msgs,{unserialize=true})
+			con:exec(([[
+%s
+print_screen(%d)
+log=xsvlog.new{
+	nofile=true,
+	ptplog='table',
+	ptplog_key=false,
+	ptplog_timeout=50,
+	ptplog_warn_print=false,
+	cols={
+		'it',
+	},
+}
+for i=1,16 do
+	log:set{it=i}
+	log:write()
+end
+log:close()
+]]):format(cam_script_mini,self._data.prnlog_num),{libs='serialize_msgs'})
+			con:wait_status{run=false}
+			con:read_all_msgs{user=handle_msg}
+			testlib.assert_teq(msgs,{
+				{'it'},
+				{'1'},
+				{'2'},
+				{'3'},
+				{'4'},
+				{'5'},
+				{'6'},
+				{'7'},
+				{'8'},
+				{'9'},
+				{'10'},
+				{'11'},
+				{'12'},
+				{'13'},
+				{'14'},
+			})
+			testlib.assert_eq(con:readfile(self._data.prnlog),'')
+		end,
+		setup=function(self,opts)
+			self:ensure_connected(opts)
+			self._data.prnlog_num = con:execwait([[
+local st = os.stat('A/CHDK/LOGS')
+if not st then
+	error('missing A/CHDK/LOGS')
+end
+if not st.is_dir then
+	error('A/CHDK/LOGS not a directory')
+end
+for i=1230, 1250 do
+	local fn=('A/CHDK/LOGS/LOG_%4d.TXT'):format(i)
+	if not os.stat(fn) then
+		return i
+	end
+end
+error('failed to find unused print log name')
+]])
+			self._data.prnlog = ('A/CHDK/LOGS/LOG_%04d.txt'):format(self._data.prnlog_num)
+		end,
+		cleanup={
+			function(self)
+				if self._data.prnlog then
+					cli:print_status(cli:execute(('rm %s'):format(self._data.prnlog)))
+				end
+			end,
+		},
+		_data = {
+		},
+	},
+	{
+		'bad_mode',
+		function()
+			testlib.assert_thrown(function()
+				con:execwait(cam_script_mini..[[
+log=xsvlog.new{
+	nofile=true,
+	ptplog='bogus',
+	cols={
+		'col1',
+		'col2',
+	},
+}
+]])
+			end,{etype='exec_runtime',msg_match='invalid ptplog mode'})
+		end,
+	},
+	{
+		'bad_key',
+		function()
+			testlib.assert_thrown(function()
+				con:execwait(cam_script_mini..[[
+log=xsvlog.new{
+	nofile=true,
+	ptplog=true,
+	ptplog_key={'what'},
+	cols={
+		'col1',
+		'col2',
+	},
+}
+]])
+			end,{etype='exec_runtime',msg_match='invalid ptplog_key'})
+		end,
+	},
+	{
+		'bad_timeout',
+		function()
+			testlib.assert_thrown(function()
+				con:execwait(cam_script_mini..[[
+log=xsvlog.new{
+	nofile=true,
+	ptplog=true,
+	ptplog_timeout='no',
+	cols={
+		'col1',
+		'col2',
+	},
+}
+]])
+			end,{etype='exec_runtime',msg_match='invalid ptplog_timeout'})
+		end,
+	}},
+}
 }})
 
 return tests

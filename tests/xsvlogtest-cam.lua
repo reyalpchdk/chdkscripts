@@ -1,5 +1,5 @@
 --[[
-  Copyright (C) 2021 <reyalp (at) gmail dot com>
+  Copyright (C) 2021-2024 <reyalp (at) gmail dot com>
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License version 2 as
   published by the Free Software Foundation.
@@ -28,6 +28,11 @@ log = xsvlog.new{
 	quote_mode=opt_quote_mode,
 	buffer_mode=opt_buffer_mode,
 	delim=opt_delim,
+	ptplog=opt_ptplog,
+	ptplog_key=opt_ptplog_key,
+	ptplog_timeout=opt_ptplog_timeout,
+	ptplog_drop_on_timeout=opt_ptplog_drop_on_timeout,
+	ptplog_warn_print=opt_ptplog_warn_print,
 	-- column names
 	cols={
 		'func1',
