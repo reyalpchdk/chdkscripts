@@ -1,7 +1,7 @@
 --[[
 License: GPL
 
-Copyright 2014-2021 reyalp (at) gmail.com
+Copyright 2014-2024 reyalp (at) gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,9 +18,10 @@ with CHDK. If not, see <http://www.gnu.org/licenses/>.
 ]]
 
 --[!inline:module_start]
--- csv log module. License: GPL
-local csvlog={}
-local log_methods = {}
+-- CSV/TSV/*SV log module. Author: reyalp (at) gmail.com. License: GPL.
+-- Source: https://github.com/reyalpchdk/chdkscripts
+local xsvlog={}
+local log_methods={}
 
 -- 'cols' can be either a simple array of names, or include sub-arrays
 -- to allow modules to export their own list of columns
@@ -188,7 +189,7 @@ function log_methods:finish_write()
 	self.fh=nil
 end
 
-function log_methods:quote_csv_cell(cell)
+function log_methods:quote_xsv_cell(cell)
 	if not self.quote_mode then
 		return cell
 	end
@@ -199,12 +200,12 @@ function log_methods:quote_csv_cell(cell)
 	end
 	return cell
 end
-function log_methods:write_csv(data)
+function log_methods:write_xsv(data)
 	local quoted
 	if self.quote_mode then
 		quoted = {}
 		for i, cell in ipairs(data) do
-			table.insert(quoted,self:quote_csv_cell(cell))
+			table.insert(quoted,self:quote_xsv_cell(cell))
 		end
 	else
 		quoted = data
@@ -217,7 +218,7 @@ function log_methods:write_data(data)
 		return
 	end
 	self:prepare_write()
-	self:write_csv(data)
+	self:write_xsv(data)
 	self:finish_write()
 end
 
@@ -232,7 +233,7 @@ function log_methods:flush()
 		end
 		self:prepare_write()
 		for i,data in ipairs(self.lines) do
-			self:write_csv(data)
+			self:write_xsv(data)
 		end
 		self:finish_write()
 		self.lines={}
@@ -290,7 +291,7 @@ function log_methods:close()
 	end
 end
 
-function csvlog.new(opts)
+function xsvlog.new(opts)
 	local t={}
 	for k,v in pairs(log_methods) do
 		t[k] = v
@@ -298,6 +299,6 @@ function csvlog.new(opts)
 	t:init(opts)
 	return t
 end
-return csvlog
+return xsvlog
 --[!inline:module_end]
 

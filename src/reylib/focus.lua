@@ -1,7 +1,7 @@
 --[[
 License: GPL
 
-Copyright 2014-2021 reyalp (at) gmail.com
+Copyright 2014-2024 reyalp (at) gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,7 +18,8 @@ with CHDK. If not, see <http://www.gnu.org/licenses/>.
 ]]
 
 --[!inline:module_start]
--- focus override module. License: GPL
+-- Focus override module. Author: reyalp (at) gmail.com. License: GPL.
+-- Source: https://github.com/reyalpchdk/chdkscripts
 local focus={
 	mode_names={'AF','AFL','MF'},
 	valid_modes={}, -- table of name=true

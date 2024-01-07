@@ -1,7 +1,7 @@
 --[[
 License: GPL
 
-Copyright 2014-2021 reyalp (at) gmail.com
+Copyright 2014-2024 reyalp (at) gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -17,7 +17,8 @@ You should have received a copy of the GNU General Public License
 with CHDK. If not, see <http://www.gnu.org/licenses/>.
 ]]
 --[!inline:module_start]
--- clock time startup module. License: GPL
+-- Clock time startup module. Author: reyalp (at) gmail.com. License: GPL.
+-- Source: https://github.com/reyalpchdk/chdkscripts
 local stru=require'reylib/strutil' --[!inline]
 local clockstart={
 	prestart_sec=15, -- seconds between main wait and final, to allow rec switching, zoom etc
