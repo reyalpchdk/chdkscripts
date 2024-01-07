@@ -43,7 +43,7 @@ http://chdk.setepontos.com/index.php?topic=8997.0
 * Convert ev_change to imath so final change values are rounded
 * Make log columns consistently refer to the current shot, except for d_ev* which refer to the next shot
 * Log limit related values in columns rather than desc. These values are only logged when the corresponding condition is present
-** nd_tv_tr = When ND active, amount over ND trigger threshold, negative if hysteresis active  "tv over nd" if positive, "tv nd hist" if negative
+** nd_tv_tr = When ND active, amount over ND trigger threshold, negative if hysteresis active, formerly  "tv over nd" if positive, "tv nd hist" if negative
 ** tv_l1 = amount calculated tv is over tv96_short_limit or under tv96_long_limit, formerly "tv over long" if positive, "tv under short" if negative
 ** tv_sv_tr = Amount of calculated tv moved to ISO due to being over tv96_sv_thresh, formerly "tv iso adj"
 ** sv_l1 = Amount calculated sv is over sv96_max, formerly "iso over limit"
