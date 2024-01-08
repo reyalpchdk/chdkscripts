@@ -29,7 +29,7 @@
 
 License: GPL
 
-Copyright 2015-2021 reyalp (at) gmail.com
+Copyright 2015-2024 reyalp (at) gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -158,6 +158,12 @@ function run()
 		name="A/fixedint.csv",
 		append=(ui_log_mode.value=='Append'),
 		dummy=(ui_log_mode.value=='None'),
+		-- PTP logging options, set assumed to be set externally when running via PTP
+		ptplog=ptplog,
+		ptplog_key=ptplog_key,
+		ptplog_timeout=ptplog_timeout,
+		ptplog_drop_on_timeout=ptplog_drop_on_timeout,
+		ptplog_warn_print=ptplog_warn_print,
 		-- column names
 		cols={
 			'date',
