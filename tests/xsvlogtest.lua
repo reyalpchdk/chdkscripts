@@ -19,6 +19,8 @@ run with
  chdkptp -e'exec require"xsvlogtest":do_test()'
 or a single test like
  chdkptp -e'exec require"xsvlogtest":do_subtest("bad_init")'
+
+NOTE: may require svn version of chdkptp
 ]]
 local inlinemods = require'extras/inlinemods'
 local testlib = require'testlib'
@@ -38,6 +40,43 @@ local xsvlog=require'reylib/xsvlog' --[!inline]
 local function cleanup_remove_cam_csv(self,opts)
 	if con:is_connected() and con:stat('A/logtest.csv') then
 		cli:print_status(cli:execute('rm logtest.csv'))
+	end
+end
+
+local function get_free_print_log_num()
+	return con:execwait([[
+local st = os.stat('A/CHDK/LOGS')
+if not st then
+	if not mkdir_m('A/CHDK/LOGS') then
+		error('failed to create missing A/CHDK/LOGS')
+	end
+	return 1230
+end
+if not st.is_dir then
+	error('A/CHDK/LOGS not a directory')
+end
+for i=1230, 1250 do
+	local fn=('A/CHDK/LOGS/LOG_%4d.TXT'):format(i)
+	if not os.stat(fn) then
+		return i
+	end
+end
+error('failed to find unused print log name')
+]],{libs='mkdir_m'})
+end
+
+local function setup_get_free_print_log(self,opts)
+	if not self._data then
+		self._data = {}
+	end
+	self:ensure_connected(opts)
+	self._data.prnlog_num = get_free_print_log_num()
+	self._data.prnlog = ('A/CHDK/LOGS/LOG_%04d.txt'):format(self._data.prnlog_num)
+end
+
+local function cleanup_remove_print_log(self,opts)
+	if con:is_connected() and self._data.prnlog then
+		cli:print_status(cli:execute(('rm %s'):format(self._data.prnlog)))
 	end
 end
 
@@ -689,35 +728,10 @@ it
 ]])
 
 		end,
-		setup=function(self,opts)
-			self:ensure_connected(opts)
-			self._data.prnlog_num = con:execwait([[
-local st = os.stat('A/CHDK/LOGS')
-if not st then
-	error('missing A/CHDK/LOGS')
-end
-if not st.is_dir then
-	error('A/CHDK/LOGS not a directory')
-end
-for i=1230, 1250 do
-	local fn=('A/CHDK/LOGS/LOG_%4d.TXT'):format(i)
-	if not os.stat(fn) then
-		return i
-	end
-end
-error('failed to find unused print log name')
-]])
-			self._data.prnlog = ('A/CHDK/LOGS/LOG_%04d.txt'):format(self._data.prnlog_num)
-		end,
+		setup=setup_get_free_print_log,
 		cleanup={
-			function(self)
-				if self._data.prnlog then
-					cli:print_status(cli:execute(('rm %s'):format(self._data.prnlog)))
-				end
-			end,
+			cleanup_remove_print_log,
 			cleanup_remove_cam_csv,
-		},
-		_data = {
 		},
 	},
 	{
@@ -776,35 +790,8 @@ msg queue full 17
 msg timeout 17
 ]])
 		end,
-		setup=function(self,opts)
-			self:ensure_connected(opts)
-			self._data.prnlog_num = con:execwait([[
-local st = os.stat('A/CHDK/LOGS')
-if not st then
-	error('missing A/CHDK/LOGS')
-end
-if not st.is_dir then
-	error('A/CHDK/LOGS not a directory')
-end
-for i=1230, 1250 do
-	local fn=('A/CHDK/LOGS/LOG_%4d.TXT'):format(i)
-	if not os.stat(fn) then
-		return i
-	end
-end
-error('failed to find unused print log name')
-]])
-			self._data.prnlog = ('A/CHDK/LOGS/LOG_%04d.txt'):format(self._data.prnlog_num)
-		end,
-		cleanup={
-			function(self)
-				if self._data.prnlog then
-					cli:print_status(cli:execute(('rm %s'):format(self._data.prnlog)))
-				end
-			end,
-		},
-		_data = {
-		},
+		setup=setup_get_free_print_log,
+		cleanup=cleanup_remove_print_log,
 	},
 	{
 		'timeout3', -- check drop_on_timeout disabled
@@ -856,35 +843,8 @@ msg timeout 16
 msg timeout 17
 ]])
 		end,
-		setup=function(self,opts)
-			self:ensure_connected(opts)
-			self._data.prnlog_num = con:execwait([[
-local st = os.stat('A/CHDK/LOGS')
-if not st then
-	error('missing A/CHDK/LOGS')
-end
-if not st.is_dir then
-	error('A/CHDK/LOGS not a directory')
-end
-for i=1230, 1250 do
-	local fn=('A/CHDK/LOGS/LOG_%4d.TXT'):format(i)
-	if not os.stat(fn) then
-		return i
-	end
-end
-error('failed to find unused print log name')
-]])
-			self._data.prnlog = ('A/CHDK/LOGS/LOG_%04d.txt'):format(self._data.prnlog_num)
-		end,
-		cleanup={
-			function(self)
-				if self._data.prnlog then
-					cli:print_status(cli:execute(('rm %s'):format(self._data.prnlog)))
-				end
-			end,
-		},
-		_data = {
-		},
+		setup=setup_get_free_print_log,
+		cleanup=cleanup_remove_print_log,
 	},
 	{
 		'timeout4', -- check warn_print can be turned off
@@ -931,35 +891,8 @@ log:close()
 			})
 			testlib.assert_eq(con:readfile(self._data.prnlog),'')
 		end,
-		setup=function(self,opts)
-			self:ensure_connected(opts)
-			self._data.prnlog_num = con:execwait([[
-local st = os.stat('A/CHDK/LOGS')
-if not st then
-	error('missing A/CHDK/LOGS')
-end
-if not st.is_dir then
-	error('A/CHDK/LOGS not a directory')
-end
-for i=1230, 1250 do
-	local fn=('A/CHDK/LOGS/LOG_%4d.TXT'):format(i)
-	if not os.stat(fn) then
-		return i
-	end
-end
-error('failed to find unused print log name')
-]])
-			self._data.prnlog = ('A/CHDK/LOGS/LOG_%04d.txt'):format(self._data.prnlog_num)
-		end,
-		cleanup={
-			function(self)
-				if self._data.prnlog then
-					cli:print_status(cli:execute(('rm %s'):format(self._data.prnlog)))
-				end
-			end,
-		},
-		_data = {
-		},
+		setup=setup_get_free_print_log,
+		cleanup=cleanup_remove_print_log,
 	},
 	{
 		'bad_mode',
