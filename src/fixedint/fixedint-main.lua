@@ -314,6 +314,15 @@ function run()
 	if cont then
 		log:log_desc('cont_mode')
 	end
+
+	if rs_opts then
+		log:log_desc('remoteshoot')
+	end
+
+	if ptplog then
+		log:log_desc('ptplog')
+	end
+
 	if ui_shots == 0 then
 		ui_shots = 100000000
 	end

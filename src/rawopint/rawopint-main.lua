@@ -424,6 +424,10 @@ function run()
 		log:log_desc('remoteshoot')
 	end
 
+	if ptplog then
+		log:log_desc('ptplog')
+	end
+
 	if ui_zoom_mode_t.value ~= 'Off' then
 		local zoom_step
 		if ui_zoom_mode_t.value == 'Pct' then
