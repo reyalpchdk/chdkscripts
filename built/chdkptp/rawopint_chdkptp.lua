@@ -1,6 +1,7 @@
 --[[
 chdkptp "glue" script to use rawopint.lua with remoteshoot
 This file must be on the host PC running chdkptp, NOT on the camera
+The rawopint.lua script must be on the camera SD card, in CHDK/SCRIPTS
 from chdkptp, use like
  rs -script=rawopint_chdkptp.lua -cont=100 -int=5
 The following remoteshoot options are mapped to corresponding
@@ -181,7 +182,7 @@ if rs_opts then
 	-- required for canon formats, not strictly required for CHDK raw
 	ui_use_raw_e=0
 	ui_canon_img_fmt=0
-	-- pass through SD and sd mode
+	-- pass through SD and SD mode
 	if rs_opts.sd then
 		ui_sd=rs_opts.sd
 		if rs_opts.sdprefmode then
@@ -191,7 +192,7 @@ if rs_opts then
 		-- default to MF, focus lib will pick a different mode if not supported
 			ui_sd_mode_t.value = 'MF'
 		end
-		-- index isn't current used, but try to make it consistent
+		-- index isn't currently used, but try to make it consistent
 		ui_sd_mode_t.index = ({MF=2,AFL=3,AF=4})[ui_sd_mode_t.value]
 	end
 end
