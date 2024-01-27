@@ -751,10 +751,12 @@ log=xsvlog.new{
 		'it',
 	},
 }
+local yc,yms = set_yield(-1,-1)
 for i=1,17 do
 	log:set{it=i}
 	log:write()
 end
+set_yield(yc,yms)
 log:close()
 ]]):format(cam_script_mini,self._data.prnlog_num),{libs='serialize_msgs'})
 			-- wait for queue to fill up
@@ -811,10 +813,12 @@ log=xsvlog.new{
 		'it',
 	},
 }
+local yc,yms = set_yield(-1,-1)
 for i=1,17 do
 	log:set{it=i}
 	log:write()
 end
+set_yield(yc,yms)
 log:close()
 ]]):format(cam_script_mini,self._data.prnlog_num),{libs='serialize_msgs'})
 			con:wait_status{run=false}
@@ -864,10 +868,12 @@ log=xsvlog.new{
 		'it',
 	},
 }
+local yc,yms = set_yield(-1,-1)
 for i=1,16 do
 	log:set{it=i}
 	log:write()
 end
+set_yield(yc,yms)
 log:close()
 ]]):format(cam_script_mini,self._data.prnlog_num),{libs='serialize_msgs'})
 			con:wait_status{run=false}
