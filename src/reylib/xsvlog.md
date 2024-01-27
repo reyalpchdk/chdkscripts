@@ -23,9 +23,14 @@ log = xsvlog.new{
 -- the following are defaults
 --	delim=',',
 --	append=false,
---	dummy=false,
+--	nofile=false,
 --	buffer_mode='os',
 --	quote_mode='auto',
+--  ptplog=false,
+--  ptplog_key='xsvlog',
+--  ptplog_warn_print=true,
+--  ptplog_timeout=250,
+--  ptplog_drop_on_timeout=true,
 
 -- columns - at least one column is required
 	cols={
@@ -64,8 +69,8 @@ log = xsvlog.new{
 * `name` - string: Logfile name, like "A/FOO.CSV". Required.
 * `delim` - string: Delimiter. Default is ',' but tab `\t` or any single character other than " or CR or LF may be used. Tab allows free form text to include commas, without requiring quoting, and is supported by many programs.
 * `append` - boolean: If true, name is appended to. Otherwise, it is overwritten each time `xsvlog.new` is used.
-* `dummy` - boolean: If true, no output file is created, and all log values are discarded
-* `buffer_mode` - string: one of "os", "table" or "sync". Default is os.
+* `nofile` - boolean: If true, no output file is created, and all log values are discarded unless ptplog is enabled. Previously named `dummy`, which is still accepted for backward compatibility.
+* `buffer_mode` - string: one of "os", "table" or "sync". Default is "os". Not this applies only to file logging, PTP logging always sends at each `log:write` call.
    * "os" opens the file once in xsvlog.new, uses write to write each line, and closes the file on `log:close`. This means the camera OS handles file buffering, and writes have relatively little impact on script performance. However, it also means that a script crash or error can result in losing a lot of log lines.
    * "table" stores all log values in a Lua table until `log:flush` or `log:close` is called, at which point, the log is opened, appended to and closed. This allows the script to manage writes, or avoid them entirely while the script is running, but a script that logs a lot can easily exhaust available memory.
    * "sync" opens the file, appends and closes for each `log:write` call. This minimizes information loss crashes, but can significantly impact script performance because of the many small writes and file flushes.
@@ -77,7 +82,7 @@ log = xsvlog.new{
 ## Defining columns
 Column names and order are defined using the `cols` option, which must be an array of strings and/or arrays. At least one column must be defined. Strings define column names, in the order they appear. Arrays are processed recursively, allowing script modules to define a set of columns which they expect to log to. Column names must be unique.
 ### Function columns
-Function columns have their values set by a function called automatically when log:write() is called. They are defined in the `funcs` option, which is a table mapping column names to functions. Any columns referenced in `funcs` must also appear in `cols`. If a function requires arguments, it can be wrapped as `tsensor` is in the example above.
+Function columns have their values set by a function called automatically when `log:write` is called. They are defined in the `funcs` option, which is a table mapping column names to functions. Any columns referenced in `funcs` must also appear in `cols`. If a function requires arguments, it can be wrapped as `tsensor` is in the example above.
 ### Table columns
 Table columns accumulate values each time `log:set` is called, and concatenate them with a separator on `log:write`. This can be used in conjunction with `text_loggers` option to record free-form text messages.
 ### Free-form text
@@ -107,10 +112,25 @@ log:set{
 	av=get_av96(),
 }
 ```
+Except for table columns, `log:set` overwrites any previous value.
+
+## Writing the log
+As described above, `log:set` only sets column values for the next write. To actually output a complete log line, `log:write` must be called. For a script that shoots, this would typically be done once per shot, at the end of the main shooting loop.
+
 ## Other functions
 * `log:close` should be called when the script ends, to ensure the log is fully written to file. No further writes are possible after close is called. To ensure output is written without closing, use `log:flush`.
 * `log:flush` may be called to ensure the most recent values written with `log:write` are written to SD card. The effect depends on the buffer mode: For "os", Lua `file:flush` is called. For "table", the file is opened, all pending lines are written, and the file is closed. For "sync", `log:flush` has no effect, since each row is automatically flushed.
 
+## Logging over PTP
+Log values can be sent to a connected a PTP host such as a PC using CHDK `write_usb_msg`, in addition to or instead of file output. The output can the be logged, displayed or otherwise processed using the CHDK PTP extension client such as [chdkptp](https://app.assembla.com/spaces/chdkptp/wiki). Logging over PTP also avoids overhead of `buffer_mode` `sync` without the risk of losing log lines associated with `os`. Messages are sent as a Lua table, with the log values in the key specified by `ptplog_key`. PTP logging is configured with the following options:
+* `ptplog` - string or boolean: Enable / disable and set output type. Value is one of "table", "string" or boolean where `true` is equivalent to "table" and `false` disables. Default `false`. Note this controls the type of the log values, but the log message is always a table, with the values in the field specified by `ptplog_key`
+   * "table" sends the log values as an Lua array.
+   * "string" sends the log values as a single string, as it would appear in file output, without a terminating newline.
+* `ptplog_key` - string, default "xsvlog". This defines the field within the table message to hold the value, which can be used to distinguish log messages from other script message.
+* `ptplog_warn_print` - boolean, default `true`. If enabled, a warning is printed the CHDK script console if writing a message times out.
+* `ptplog_timeout` - number of milliseconds, default 250. This specifies the time to wait if the send send queue becomes full. Note the send queue buffers up to 15 messages before the timeout becomes relevant, so unless the script is logging very rapidly or the client is polling very slowly, it will likely not be hit in normal operation.
+* `ptplog_drop_on_timeout` - boolean, default `true`. If enabled, when a timeout occurs, subsequent messages will be dropped without a timeout until the queue is not full. If disabled, the script will block for the `ptplog_timeout` value for each `log:write` that occurs with a full queue. This allows the script to continue running at normal speed if the connection to the PTP host goes away.
+
 
 ## Examples
-See [rawopint](/src/rawopint), [fixedint](/src/fixedint) and [contae](/src/contae) in this repository.
+See [rawopint](/src/rawopint), [fixedint](/src/fixedint), [contae](/src/contae) and [xsvlog tests](/tests/xsvlogtest.lua) in this repository.
