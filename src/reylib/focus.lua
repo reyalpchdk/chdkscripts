@@ -1,7 +1,7 @@
 --[[
 License: GPL
 
-Copyright 2014-2024 reyalp (at) gmail.com
+Copyright 2014-2025 reyalp (at) gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -22,22 +22,40 @@ with CHDK. If not, see <http://www.gnu.org/licenses/>.
 -- Source: https://github.com/reyalpchdk/chdkscripts
 local focus={
 	mode_names={'AF','AFL','MF'},
-	valid_modes={}, -- table of name=true
-	modes={}, -- array of usable mode names
 }
+
 -- initialize valid modes for sd over
+-- NOTE must be called again if cont or servo AF state changes
 function focus:init()
-	-- bits: 1 = AF, 2 = AFL, 3 = MF
-	local modes=get_sd_over_modes()
-	self.modes={}
-	for i=1,3 do
-		if bitand(1,modes) == 1 then
-			table.insert(self.modes,self.mode_names[i])
+	self.valid_modes={} -- table of name=true
+	self.modes={} -- array of usable mode names
+	self.modebits=0 -- bits: 1 = AF, 2 = AFL, 3 = MF
+	self.modebits=get_sd_over_modes()
+	if self:af_override_blocked() then
+		self.modebits = bitand(self.modebits,bitnot(1))
+	end
+	local bits = self.modebits
+	for i,name in ipairs(self.mode_names) do
+		if bitand(1,bits) == 1 then
+			table.insert(self.modes,name)
 		end
-		modes = bitshru(modes,1)
+		bits = bitshru(bits,1)
 	end
 	for i,m in ipairs(self.modes) do
 		self.valid_modes[m]=true
+	end
+end
+--[[
+override in AF ignored in cont or servo AF
+not handled in init because may change at runtime
+]]
+function focus:af_override_blocked()
+	local props=require'propcase'
+	if props.CONTINUOUS_AF and get_prop(props.CONTINUOUS_AF) ~= 0 then
+		return true
+	end
+	if props.SERVO_AF and get_prop(props.SERVO_AF) ~= 0 then
+		return true
 	end
 end
 -- get current AF/AFL/MF state
@@ -102,8 +120,8 @@ function focus:enable_override(prefmode)
 		elseif self.valid_modes[self:get_mode()] then
 			usemode = self:get_mode()
 		else
- 			-- no pref, use first available
-			usemode = self.modes[1]
+			-- no pref, use last available (MF if present)
+			usemode = self.modes[#self.modes]
 		end
 	end
 	self:set_mode(usemode)
