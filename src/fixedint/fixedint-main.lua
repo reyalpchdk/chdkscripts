@@ -29,7 +29,7 @@
 
 License: GPL
 
-Copyright 2015-2024 reyalp (at) gmail.com
+Copyright 2015-2025 reyalp (at) gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -116,6 +116,9 @@ function init_shutter_procs()
 end
 
 function cleanup()
+	if focus_mode_save then
+		focus:set_mode(focus_mode_save)
+	end
 	-- note for some cameras, canon raw is in RESOLUTION prop
 	-- restore raw and size settings in reverse order of set to restore initial value
 	if canon_img_fmt_save then
@@ -275,6 +278,7 @@ function run()
 	end
 	if ui_sd_mode_t.value ~= 'Off' then
 		focus:init()
+		focus_mode_save = focus:get_mode()
 		focus:enable_override(ui_sd_mode_t.value)
 		log:log_desc('uisd:%d pref:%s mode:%s',ui_sd,ui_sd_mode_t.value,focus:get_mode())
 		focus:set(ui_sd)
