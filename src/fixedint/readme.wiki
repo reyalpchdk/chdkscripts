@@ -19,6 +19,7 @@ https://github.com/reyalpchdk/chdkscripts
 * Canon RAW/JPEG setting can be set on cameras with native raw support
 * Added support for chdkptp tethered shooting
 * Log 'date' column split to date and time, now refers to start of main loop instead of end
+* Focus mode is restored to original value if changed by SD override option.
 
 ===Version 1.3 - May 6, 2018===
 * Added options to start at a particular clock time

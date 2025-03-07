@@ -52,6 +52,7 @@ http://chdk.setepontos.com/index.php?topic=8997.0
 * Meter position is now adjustable
 * Improved support for chdkptp tethered shooting
 * "date", "time" columns now refer to the start of the shooting loop, rather than the end. "tick" column removed.
+* Focus mode is restored to original value if changed by SD override option.
 
 ===Version 0.25 - May 6, 2018===
 * Add workaround to prevent aperture changes on cameras incorrectly defined to have ND even when ND threshold is disabled. Thanks c_joerg for reporting
