@@ -71,7 +71,7 @@ There may be documentation for more of these someday, but for now, [use the sour
 
 * `clkstart.lua` - Wait for a particular time to start shooting
 * `disp.lua` - Control display / backlight
-* `focus.lua` - Control focus overrides, selecting supported focus override mode
+* `focus.lua` - Control focus overrides, selecting supported focus override mode ([documentation](src/reylib/focus.md))
 * `rawexp.lua` - Calculate exposure from raw data of previous shot, with smoothing, limits
 * `shutdown.lua` - Trigger shutdown on conditions like low batter, low SD card space
 * `strutil.lua` - String utility functions
