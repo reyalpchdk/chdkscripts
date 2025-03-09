@@ -452,7 +452,6 @@ function run()
 	end
 
 	if ui_sd_mode_t.value ~= 'Off' then
-		focus:init()
 		focus_mode_save = focus:get_mode()
 		focus:enable_override(ui_sd_mode_t.value)
 		log:log_desc('uisd:%d pref:%s mode:%s',ui_sd,ui_sd_mode_t.value,focus:get_mode())
