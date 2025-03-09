@@ -8,7 +8,7 @@ This script shoots one or more shots at a constant exposure. It is primarily int
 Discussion / Bug reporting thread:
 http://chdk.setepontos.com/index.php?topic=12695.0
 
-Download the latest version form the releases page:
+Download the latest version from the releases page:
 https://github.com/reyalpchdk/chdkscripts/releases
 
 Github repo with current development source:

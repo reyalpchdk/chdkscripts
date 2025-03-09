@@ -18,7 +18,7 @@ Despite the above, it can still produce good results in many situations.
 Discussion / Bug reporting thread:
 http://chdk.setepontos.com/index.php?topic=12697.0
 
-Download the latest version form the releases page:
+Download the latest version from the releases page:
 https://github.com/reyalpchdk/chdkscripts/releases
 
 Github repo with current development source:
