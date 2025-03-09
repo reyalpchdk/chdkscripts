@@ -10,7 +10,10 @@ The basic idea is the script adjusts exposure after each shot in a continuous se
 Discussion / Bug reporting thread:
 http://chdk.setepontos.com/index.php?topic=12696.0
 
-Github repo with current development source and releases:
+Download the latest version form the releases page:
+https://github.com/reyalpchdk/chdkscripts/releases
+
+Github repo with current development source:
 https://github.com/reyalpchdk/chdkscripts
 
 ==Change History==
