@@ -637,35 +637,19 @@ focus=(function() -- inline reylib/focus
 -- Source: https://github.com/reyalpchdk/chdkscripts
 local focus={
 	mode_names={'AF','AFL','MF'},
+	-- populated after init
+	-- valid_modes={} -- table of name=true
+	-- modes={} -- array of usable mode names
+	-- modebits -- bitmask of available modes
 }
 
--- initialize valid modes for sd over
--- NOTE must be called again if cont or servo AF state changes
-function focus:init()
-	self.valid_modes={} -- table of name=true
-	self.modes={} -- array of usable mode names
-	self.modebits=0 -- bits: 1 = AF, 2 = AFL, 3 = MF
-	self.modebits=get_sd_over_modes()
-	if self:af_override_blocked() then
-		self.modebits = bitand(self.modebits,bitnot(1))
-	end
-	local bits = self.modebits
-	for i,name in ipairs(self.mode_names) do
-		if bitand(1,bits) == 1 then
-			table.insert(self.modes,name)
-		end
-		bits = bitshru(bits,1)
-	end
-	for i,m in ipairs(self.modes) do
-		self.valid_modes[m]=true
-	end
-end
+local props=require'propcase'
+
 --[[
 override in AF ignored in cont or servo AF
-not handled in init because may change at runtime
+but does not affect get_sd_over_modes
 ]]
 function focus:af_override_blocked()
-	local props=require'propcase'
 	if props.CONTINUOUS_AF and get_prop(props.CONTINUOUS_AF) ~= 0 then
 		return true
 	end
@@ -673,12 +657,43 @@ function focus:af_override_blocked()
 		return true
 	end
 end
--- get current AF/AFL/MF state
+
+--[[
+get bitmask representing available modes, as defined by
+port and servo + cont AF state
+]]
+function focus:get_modebits()
+	local bits=get_sd_over_modes()
+	if self:af_override_blocked() then
+		bits = bitand(bits,bitnot(1))
+	end
+	return bits
+end
+
+-- initialize valid modes for sd over
+function focus:init()
+	local modebits = self:get_modebits()
+	if self.modebits == modebits then
+		return
+	end
+	self.modebits=modebits
+	self.valid_modes={} -- table of name=true
+	self.modes={} -- array of usable mode names
+	for i,name in ipairs(self.mode_names) do
+		if bitand(1,modebits) == 1 then
+			table.insert(self.modes,name)
+			self.valid_modes[name]=true
+		end
+		modebits = bitshru(modebits,1)
+	end
+end
+
+-- get current AF/AFL/MF state as string, one of 'AF', 'AFL', 'MF'
 function focus:get_mode()
-	if get_prop(require'propcase'.AF_LOCK) == 1 then
+	if get_prop(props.AF_LOCK) == 1 then
 		return 'AFL'
 	end
-	if get_prop(require'propcase'.FOCUS_MODE) == 1 then
+	if get_prop(props.FOCUS_MODE) == 1 then
 		return 'MF'
 	end
 	return 'AF'
@@ -713,15 +728,19 @@ function focus:set_mode(mode,force)
 end
 --[[
 set to a mode that allows override, defaulting to prefmode, or the current mode if not set
+if prefmode is 'MF' or 'AFL' and not available, then the other is preffered over AF
+returns true if a mode supporting SD overrides is available, false otherwise
 ]]
 function focus:enable_override(prefmode)
+	-- ensure initialized
+	self:init()
 	-- override not supported or in playback
 	if #self.modes == 0 or not get_mode() then
 		return false
 	end
 	-- no pref, default to overriding in current mode if possible
 	if not prefmode then
-		prefmode=self:get_mode()
+		prefmode = self:get_mode()
 	end
 	local usemode
 	if self.valid_modes[prefmode] then
