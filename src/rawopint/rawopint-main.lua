@@ -82,7 +82,7 @@ You should have received a copy of the GNU General Public License
 with CHDK. If not, see <http://www.gnu.org/licenses/>.
 ]]
 
-rawopint_version="0.26-dev"
+rawopint_version="0.26"
 
 require'hookutil'
 require'rawoplib'

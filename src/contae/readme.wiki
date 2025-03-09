@@ -10,14 +10,11 @@ The basic idea is the script adjusts exposure after each shot in a continuous se
 Discussion / Bug reporting thread:
 http://chdk.setepontos.com/index.php?topic=12696.0
 
-Wiki page for the latest version of the script and this documentation:
-http://chdk.wikia.com/wiki/Lua/Scripts:_Continuous_Autoexposure
-
-Github repo with current development source:
+Github repo with current development source and releases:
 https://github.com/reyalpchdk/chdkscripts
 
 ==Change History==
-===Version 0.13 - in progress===
+===Version 0.13 - Mar 8, 2025===
 * Updated rawexp lib
 * Added smoothing options
 

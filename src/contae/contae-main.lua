@@ -43,7 +43,7 @@
 
 License: GPL
 
-Copyright 2014-2021 reyalp (at) gmail.com
+Copyright 2014-2025 reyalp (at) gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -59,7 +59,7 @@ You should have received a copy of the GNU General Public License
 with CHDK. If not, see <http://www.gnu.org/licenses/>.
 
 ]]
-contae_version="0.13-dev"
+contae_version="0.13"
 
 require'hookutil'
 require'rawoplib'

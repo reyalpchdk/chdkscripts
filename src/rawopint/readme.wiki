@@ -18,7 +18,7 @@ Despite the above, it can still produce good results in many situations.
 Discussion / Bug reporting thread:
 http://chdk.setepontos.com/index.php?topic=12697.0
 
-Github repo with current development source:
+Github repo with current development source and releases:
 https://github.com/reyalpchdk/chdkscripts
 
 Earlier discussion can be found in the raw hook development thread:
@@ -28,7 +28,7 @@ Many of the concepts in the script and CHDK shooting hooks were inspired by Laps
 http://chdk.setepontos.com/index.php?topic=8997.0
 
 ==Change History==
-===Version 0.26 - in progress===
+===Version 0.26 - Mar 8, 2025===
 * CHDK 1.5.1 or later required
 * ND value and initial ND state now automatically detected for most ports
 * ND should work on most cameras in "quick" mode

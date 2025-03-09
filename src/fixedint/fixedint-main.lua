@@ -45,7 +45,7 @@ You should have received a copy of the GNU General Public License
 with CHDK. If not, see <http://www.gnu.org/licenses/>.
 
 ]]
-fixedint_version="1.4-dev"
+fixedint_version="1.4"
 
 props=require'propcase'
 require'hookutil'

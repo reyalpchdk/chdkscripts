@@ -8,11 +8,11 @@ This script shoots one or more shots at a constant exposure. It is primarily int
 Discussion / Bug reporting thread:
 http://chdk.setepontos.com/index.php?topic=12695.0
 
-Github repo with current development source:
+Github repo with current development source and releases:
 https://github.com/reyalpchdk/chdkscripts
 
 ==Change History==
-===Version 1.4 - in development===
+===Version 1.4 - Mar 8, 2025===
 * CHDK 1.5.1 or later required
 * Fixed some cases where some cameras would take an extra shot at script exit
 * Fixed display off not working if cam was in canon power saving before initial half press
