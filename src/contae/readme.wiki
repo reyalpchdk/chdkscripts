@@ -170,7 +170,7 @@ Drawing takes adds a small amount to shooting time (e.g. 20 ms on d10.) The log 
 Controls whether the metering area is drawn, either just the corners or a box
 
 ==Gauge Y offset %==
-Controls the vertical location of the debug info, in % of full resolution jpeg area height. 0 uses a default offset of 80 pixels. Use to make the debug info visible on jpegs with a different aspect ration form the sensor.
+Controls the vertical location of the debug info, in % of full resolution jpeg area height. 0 uses a default offset of 80 pixels. Use to make the debug info visible on jpegs with a different aspect ration from the sensor.
 
 ==Log mode==
 If enabled, the log is written to A/contae.csv

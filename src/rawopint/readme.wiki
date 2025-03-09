@@ -372,7 +372,7 @@ Drawing takes adds a small amount to shooting time (e.g. 20 ms on d10.) The log 
 Controls whether the metering area is drawn, either just the corners or a box
 
 ==Gauge Y offset %==
-Controls the vertical location of the debug info, in % of full resolution jpeg area height. 0 uses a default offset of 80 pixels. Use to make the debug info visible on jpegs with a different aspect ration form the sensor.
+Controls the vertical location of the debug info, in % of full resolution jpeg area height. 0 uses a default offset of 80 pixels. Use to make the debug info visible on jpegs with a different aspect ration from the sensor.
 
 ==Log mode==
 If enabled, the log is written to A/rawopint.csv
@@ -437,7 +437,7 @@ Various free-form text messages that don't easily fit in a column. The first row
 How long the script waited between shots. Negative values mean the script wasn't able to maintain the requested frame rate.
 
 ==date, time, start==
-The date, time and tick count (milliseconds since boot) of the start of a main loop iteration. The values of shoot_ready, exp_start, raw_ready and raw_done are millisecond offsets form "start"
+The date, time and tick count (milliseconds since boot) of the start of a main loop iteration. The values of shoot_ready, exp_start, raw_ready and raw_done are millisecond offsets from "start"
 
 For the pre-shoot row, these values refer to the start of half press.
 
@@ -452,7 +452,7 @@ The code is broken up into several isolated "modules" for easier understanding a
 
 Each module is a Lua table which encapsulates the required state and methods. However, some modules assume that other modules are present, for example, the exposure module requires that the log module be included and configured with the appropriate fields.
 
-If you wish to modify the script, you can edit the final built script (included in the distribution zip) rather than building form the source.
+If you wish to modify the script, you can edit the final built script (included in the distribution zip) rather than building from the source.
 
 Following the modules, the section starting at
  -- main script initialization
